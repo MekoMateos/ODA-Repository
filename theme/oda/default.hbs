@@ -4,15 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{meta_title}}</title>
+    <script>document.documentElement.classList.add("js")</script>
     <link rel="preload" href="{{asset "fonts/familjen-grotesk-latin-wght-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{asset "fonts/source-serif-4-latin-opsz-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{asset "css/oda.css"}}">
+    <link rel="stylesheet" href="{{asset "css/kuqezi.css"}}">
     {{ghost_head}}
 </head>
-<body class="{{body_class}}">
+<body class="{{body_class}}{{#match @custom.color_scheme "Kuq e zi"}} scheme-kuqezi{{/match}}">
 <a class="skip" href="#main">{{t "Skip to content"}}</a>
 
 <header class="masthead">
+    <div class="motif" aria-hidden="true"></div>
     <div class="masthead-top wrap">
         <a class="wordmark" href="{{@site.url}}" aria-label="{{@site.title}}">
             {{#if @site.logo}}<img src="{{@site.logo}}" alt="{{@site.title}}">{{else}}oda{{/if}}

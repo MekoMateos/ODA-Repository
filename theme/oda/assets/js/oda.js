@@ -1,3 +1,21 @@
+// Scroll reveal for sections below the fold (styles in kuqezi.css; skipped if reduced motion is on).
+(function () {
+    if (!document.body.classList.contains('scheme-kuqezi')) return;
+    var targets = document.querySelectorAll('.rail, .writers, .join, .author-box, .evidence, .register');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    targets.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight) return; // already visible on load: leave as is
+        el.classList.add('reveal');
+        io.observe(el);
+    });
+})();
+
 // ODA theme script: turns the "Burimet" / "Sources" section of an article into the evidence box.
 // Writers just add a heading called "Burimet" (or "Sources") at the end of the article,
 // followed by a numbered or bulleted list of sources. No plugins, no tracking.

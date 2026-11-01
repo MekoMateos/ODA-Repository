@@ -19,6 +19,7 @@ Built on self-hosted Ghost 6, behind Cloudflare, on a Hetzner server in the EU.
 - **Evidence rating** (set by the Verification Desk, internal tags): `#verifikuar` = Verified, `#pjeserisht` = Partly verified, `#korrigjuar` = Corrected. The public tag `opinion` labels opinion pieces.
 - **Evidence box:** end the article with a heading **Burimet** (or *Sources*) and a numbered list of sources. The theme turns it into the evidence box and counts the sources.
 - **Corrections:** add `#korrigjuar` and a callout at the top explaining what changed. The article shows a correction note and appears on `/korrigjimet/`.
+- **Look:** Ghost Admin > Design > Theme settings > *Color scheme*: **Kuq e zi** (red and black, woven band, animations; default) or **Guri** (stone and walnut). Animations switch off automatically for visitors who set "reduce motion" on their device.
 - **Home page rails:** set the topic slugs in Ghost Admin > Design > Theme settings (`home_topics`).
 - **Language:** set Ghost's publication language to `sq`. English articles get the tag `english`.
 

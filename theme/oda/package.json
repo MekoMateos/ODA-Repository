@@ -32,6 +32,15 @@
     },
     "card_assets": true,
     "custom": {
+      "color_scheme": {
+        "type": "select",
+        "options": [
+          "Kuq e zi",
+          "Guri"
+        ],
+        "default": "Kuq e zi",
+        "description": "Kuq e zi = red and black; Guri = stone and walnut"
+      },
       "tagline": {
         "type": "text",
         "default": "Dhoma ku flitet me prova."
