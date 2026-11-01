@@ -1,0 +1,13 @@
+{{!< default}}
+<section class="listing wrap">
+    {{#tag}}
+    <header class="listing-head">
+        <h1 class="listing-title">{{name}}</h1>
+        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
+    </header>
+    {{/tag}}
+    <div class="rail-grid">
+        {{#foreach posts}}{{> "card"}}{{/foreach}}
+    </div>
+    {{pagination}}
+</section>

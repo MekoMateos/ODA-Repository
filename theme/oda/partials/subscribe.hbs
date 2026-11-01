@@ -1,0 +1,15 @@
+{{#if @site.members_enabled}}{{#unless @member}}
+<section class="join wrap" aria-labelledby="join-h">
+    <div class="join-text">
+        <h2 id="join-h">{{t "Read ODA by email"}}</h2>
+        <p>{{t "One weekly issue from the editors, plus the authors you choose to follow. Free, and you can leave in one click."}}</p>
+    </div>
+    <form class="join-form" data-members-form="signup">
+        <label class="sr-only" for="join-email">{{t "Email address"}}</label>
+        <input id="join-email" data-members-email type="email" autocomplete="email" required placeholder="{{t "your@email.com"}}">
+        <button class="btn" type="submit">{{t "Subscribe"}}</button>
+        <p class="form-note form-success">{{t "Check your inbox to confirm."}}</p>
+        <p class="form-note form-error">{{t "That address didn't work. Check it and try again."}}</p>
+    </form>
+</section>
+{{/unless}}{{/if}}

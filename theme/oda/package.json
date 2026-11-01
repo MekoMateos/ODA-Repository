@@ -1,0 +1,55 @@
+{
+  "name": "oda",
+  "description": "ODA: multi-author civic publishing theme with evidence boxes, author newsletters and a public corrections register.",
+  "version": "0.1.0",
+  "license": "UNLICENSED",
+  "private": true,
+  "author": {
+    "name": "ODA Platform & Tech",
+    "email": "tech@oda.example.org"
+  },
+  "engines": {
+    "ghost": ">=5.0.0"
+  },
+  "keywords": [
+    "ghost-theme"
+  ],
+  "config": {
+    "posts_per_page": 12,
+    "image_sizes": {
+      "s": {
+        "width": 480
+      },
+      "m": {
+        "width": 800
+      },
+      "l": {
+        "width": 1200
+      },
+      "xl": {
+        "width": 1800
+      }
+    },
+    "card_assets": true,
+    "custom": {
+      "tagline": {
+        "type": "text",
+        "default": "Dhoma ku flitet me prova."
+      },
+      "home_topics": {
+        "type": "text",
+        "default": "politike,ekonomi,drejtesi",
+        "description": "Comma-separated tag slugs shown as rails on the home page"
+      },
+      "show_authors_on_home": {
+        "type": "boolean",
+        "default": true
+      },
+      "english_section_path": {
+        "type": "text",
+        "default": "/tag/english/",
+        "description": "Link for the language switch"
+      }
+    }
+  }
+}

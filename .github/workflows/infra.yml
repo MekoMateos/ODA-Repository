@@ -1,0 +1,58 @@
+# Deploys infra changes (docker-compose, Caddyfile, scripts) to the server.
+# Requires approval in the "production" environment. The server keeps its own .env;
+# no database or mail secrets ever live in GitHub.
+name: Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-deploy
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts lint
+        run: shellcheck -S warning infra/scripts/*.sh
+      - name: Compose file is valid
+        run: |
+          cp infra/.env.example infra/.env
+          docker compose -f infra/docker-compose.yml config -q
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Pull and restart on the server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          fingerprint: ${{ secrets.SERVER_SSH_FINGERPRINT }}
+          script: |
+            set -e
+            cd /opt/oda
+            PREV=$(git rev-parse HEAD)
+            git fetch --quiet origin main
+            git reset --hard origin/main
+            cd infra
+            ./scripts/backup.sh
+            if ! docker compose pull || ! docker compose up -d --remove-orphans; then
+              echo "Deploy failed, rolling back to $PREV"
+              cd .. && git reset --hard "$PREV" && cd infra && docker compose up -d
+              exit 1
+            fi
+            sleep 20
+            docker compose ps
+            curl -fsS -o /dev/null --resolve "$(grep ^DOMAIN= .env | cut -d= -f2):443:127.0.0.1" -k "https://$(grep ^DOMAIN= .env | cut -d= -f2)/"

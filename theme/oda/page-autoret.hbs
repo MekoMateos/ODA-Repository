@@ -1,0 +1,14 @@
+{{!< default}}
+{{#post}}
+<section class="listing wrap">
+    <header class="listing-head">
+        <h1 class="listing-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="listing-dek">{{custom_excerpt}}</p>{{/if}}
+    </header>
+{{/post}}
+    <ul class="writer-grid">
+    {{#get "authors" limit="100" include="count.posts" order="name asc" as |writers|}}
+        {{#foreach writers}}<li>{{> "author-chip"}}</li>{{/foreach}}
+    {{/get}}
+    </ul>
+</section>

@@ -1,0 +1,93 @@
+# ODA production stack: Ghost + MySQL behind Caddy.
+# Cloudflare sits in front of Caddy; the firewall only lets Cloudflare reach ports 80/443.
+#
+# Pin exact versions before going live (e.g. ghost:6.x.y-alpine) and bump them
+# deliberately through a pull request, so every upgrade is reviewed and can be rolled back.
+
+services:
+  ghost:
+    image: ghost:${GHOST_VERSION:-6-alpine}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      url: https://${DOMAIN}
+      admin__url: https://${ADMIN_DOMAIN}
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: ghost
+      database__connection__password: ${MYSQL_PASSWORD}
+      database__connection__database: ghost
+      # Transactional mail (sign-in links, invites) via Mailgun SMTP, EU region.
+      # Bulk newsletters are configured separately in Ghost Admin > Settings > Mailgun.
+      mail__transport: SMTP
+      mail__from: "ODA <noreply@${DOMAIN}>"
+      mail__options__host: smtp.eu.mailgun.org
+      mail__options__port: 587
+      mail__options__secure: "false"
+      mail__options__auth__user: ${MAILGUN_SMTP_USER}
+      mail__options__auth__pass: ${MAILGUN_SMTP_PASSWORD}
+      # Trust Cloudflare/Caddy so Ghost sees the real visitor IP for rate limiting.
+      server__host: 0.0.0.0
+      server__port: 2368
+      privacy__useGravatar: "false"
+      privacy__useRpcPing: "false"
+      privacy__useUpdateCheck: "true"
+      logging__level: info
+      logging__transports: '["stdout"]'
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:2368/ghost/api/admin/site/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: ["--innodb-buffer-pool-size=512M", "--max-connections=200"]
+    volumes:
+      - db_data:/var/lib/mysql
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [ghost]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/certs:/etc/caddy/certs:ro   # Cloudflare Origin certificate + key
+      - caddy_data:/data
+    networks: [internal]
+
+volumes:
+  ghost_content:
+  db_data:
+  caddy_data:
+
+networks:
+  internal:

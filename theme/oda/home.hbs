@@ -1,0 +1,54 @@
+{{!< default}}
+
+<section class="front wrap">
+    {{#get "posts" filter="featured:true" limit="1" include="authors,tags" as |lead|}}
+        {{#if lead}}
+            {{#foreach lead}}<div class="front-lead">{{> "card" size="lead"}}</div>{{/foreach}}
+        {{else}}
+            {{#get "posts" limit="1" include="authors,tags" as |first|}}
+                {{#foreach first}}<div class="front-lead">{{> "card" size="lead"}}</div>{{/foreach}}
+            {{/get}}
+        {{/if}}
+    {{/get}}
+
+    <aside class="front-latest" aria-labelledby="latest-h">
+        <h2 id="latest-h" class="rail-title">{{t "Latest"}}</h2>
+        <ol class="latest-list">
+        {{#get "posts" filter="featured:false" limit="6" include="authors,tags" as |latest|}}
+            {{#foreach latest}}<li>{{> "card" size="row"}}</li>{{/foreach}}
+        {{/get}}
+        </ol>
+    </aside>
+</section>
+
+{{#get "tags" filter="slug:[{{@custom.home_topics}}]" include="count.posts" limit="6" as |topics|}}
+{{#foreach topics}}
+<section class="rail wrap" aria-labelledby="rail-{{slug}}">
+    <div class="rail-head">
+        <h2 id="rail-{{slug}}" class="rail-title">{{name}}</h2>
+        <a class="rail-more" href="{{url}}">{{t "All in {name}" name=name}}</a>
+    </div>
+    <div class="rail-grid">
+        {{#get "posts" filter="tag:{{slug}}" limit="3" include="authors,tags" as |tposts|}}
+            {{#foreach tposts}}{{> "card"}}{{/foreach}}
+        {{/get}}
+    </div>
+</section>
+{{/foreach}}
+{{/get}}
+
+{{#if @custom.show_authors_on_home}}
+<section class="writers wrap" aria-labelledby="writers-h">
+    <div class="rail-head">
+        <h2 id="writers-h" class="rail-title">{{t "Writers"}}</h2>
+        <a class="rail-more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a>
+    </div>
+    <ul class="writer-strip">
+    {{#get "authors" limit="8" include="count.posts" order="count.posts desc" as |writers|}}
+        {{#foreach writers}}<li>{{> "author-chip"}}</li>{{/foreach}}
+    {{/get}}
+    </ul>
+</section>
+{{/if}}
+
+{{> "subscribe"}}

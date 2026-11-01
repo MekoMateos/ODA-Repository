@@ -1,0 +1,17 @@
+{{!-- Article card. Pass size="lead" | "row" | (default) --}}
+<article class="card card-{{#if size}}{{size}}{{else}}std{{/if}} {{post_class}}">
+    {{#if feature_image}}{{#match size "!=" "row"}}
+    <a class="card-img" href="{{url}}" tabindex="-1" aria-hidden="true">
+        <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
+             sizes="(min-width: 960px) {{#match size "lead"}}760px{{else}}360px{{/match}}, 92vw"
+             src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">
+    </a>
+    {{/match}}{{/if}}
+    <div class="card-body">
+        {{> "proof"}}
+        <h3 class="card-title"><a href="{{url}}">{{title}}</a></h3>
+        {{#match size "lead"}}<p class="card-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="34"}}{{/if}}</p>{{/match}}
+        {{#match size "!=" "row"}}{{#match size "!=" "lead"}}{{#if custom_excerpt}}<p class="card-excerpt">{{custom_excerpt}}</p>{{/if}}{{/match}}{{/match}}
+        <p class="byline">{{t "by"}} {{authors separator=", "}}, <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM YYYY"}}</time></p>
+    </div>
+</article>

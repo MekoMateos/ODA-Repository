@@ -1,0 +1,6 @@
+{{!< default}}
+<section class="listing wrap error-page">
+    <h1 class="listing-title">{{statusCode}}</h1>
+    <p class="listing-dek">{{#if (match statusCode "404")}}{{t "This page doesn't exist or has moved. Try search, or go back to the front page."}}{{else}}{{message}}{{/if}}</p>
+    <a class="btn" href="{{@site.url}}">{{t "Front page"}}</a>
+</section>

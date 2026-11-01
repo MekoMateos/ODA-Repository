@@ -1,0 +1,70 @@
+{{!< default}}
+{{#post}}
+<article class="article {{post_class}}">
+    <header class="article-head wrap-text">
+        <div class="article-kicker">
+            {{#primary_tag}}<a class="kicker-tag" href="{{url}}">{{name}}</a>{{/primary_tag}}
+            {{> "proof"}}
+        </div>
+        <h1 class="article-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}
+        <div class="article-byline">
+            {{#foreach authors}}
+                <a class="byline-author" href="{{url}}">
+                    {{#if profile_image}}<img class="avatar avatar-s" src="{{img_url profile_image size="s"}}" alt="">{{/if}}
+                    <span>{{name}}</span>
+                </a>
+            {{/foreach}}
+            <span class="byline-meta"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time>, {{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+        </div>
+    </header>
+
+    {{#if feature_image}}
+    <figure class="article-image wrap-wide">
+        <img srcset="{{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w, {{img_url feature_image size="xl"}} 1800w"
+             sizes="(min-width: 1200px) 1100px, 100vw" src="{{img_url feature_image size="l"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}">
+        {{#if feature_image_caption}}<figcaption>{{feature_image_caption}}</figcaption>{{/if}}
+    </figure>
+    {{/if}}
+
+    {{#has tag="#korrigjuar"}}
+    <aside class="correction-note wrap-text" role="note">
+        <p><strong>{{t "Corrected."}}</strong> {{t "This article was changed after publication. What changed and why is in the corrections register."}} <a href="{{@site.url}}/korrigjimet/">{{t "See corrections"}}</a></p>
+    </aside>
+    {{/has}}
+
+    <div class="gh-content article-body wrap-text">
+        {{content}}
+    </div>
+
+    <footer class="article-foot wrap-text">
+        <p class="report">{{t "Spotted an error?"}} <a href="{{@site.url}}/korrigjimet/?artikulli={{encode url}}">{{t "Request a correction"}}</a></p>
+
+        {{#foreach authors}}
+        <div class="author-box">
+            {{#if profile_image}}<img class="avatar" src="{{img_url profile_image size="s"}}" alt="">{{/if}}
+            <div>
+                <p class="author-box-name"><a href="{{url}}">{{name}}</a></p>
+                {{#if bio}}<p class="author-box-bio">{{bio}}</p>{{/if}}
+                {{#if @site.members_enabled}}<a class="btn btn-quiet" href="#/portal/signup">{{t "Follow {name} by email" name=name}}</a>{{/if}}
+            </div>
+        </div>
+        {{/foreach}}
+    </footer>
+
+    {{#if comments}}
+    <section class="article-comments wrap-text">
+        {{comments title=(t "Discussion") count=true}}
+    </section>
+    {{/if}}
+</article>
+
+<section class="rail wrap" aria-labelledby="more-h">
+    <div class="rail-head"><h2 id="more-h" class="rail-title">{{t "Read next"}}</h2></div>
+    <div class="rail-grid">
+    {{#get "posts" filter="tags:{{primary_tag.slug}}+id:-{{id}}" limit="3" include="authors,tags" as |related|}}
+        {{#foreach related}}{{> "card"}}{{/foreach}}
+    {{/get}}
+    </div>
+</section>
+{{/post}}

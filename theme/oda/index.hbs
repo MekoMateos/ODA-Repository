@@ -1,0 +1,8 @@
+{{!< default}}
+<section class="listing wrap">
+    <h1 class="listing-title">{{t "All articles"}}</h1>
+    <div class="rail-grid">
+        {{#foreach posts}}{{> "card"}}{{/foreach}}
+    </div>
+    {{pagination}}
+</section>

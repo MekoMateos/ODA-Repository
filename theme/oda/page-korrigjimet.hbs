@@ -1,0 +1,32 @@
+{{!< default}}
+{{!-- Public corrections register. Editors tag corrected posts with the internal tag #korrigjuar
+      and explain the change in a callout at the top of the article. --}}
+{{#post}}
+<article class="article page-article">
+    <header class="article-head wrap-text">
+        <h1 class="article-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}
+    </header>
+    <div class="gh-content article-body wrap-text">{{content}}</div>
+</article>
+{{/post}}
+
+<section class="register wrap-text" aria-labelledby="reg-h">
+    <h2 id="reg-h" class="rail-title">{{t "Corrected articles"}}</h2>
+    <table class="register-table">
+        <thead><tr><th scope="col">{{t "Last updated"}}</th><th scope="col">{{t "Article"}}</th><th scope="col">{{t "Author"}}</th></tr></thead>
+        <tbody>
+        {{#get "posts" filter="tag:hash-korrigjuar" order="updated_at desc" limit="100" include="authors" as |fixed|}}
+            {{#foreach fixed}}
+            <tr>
+                <td><time datetime="{{date updated_at format="YYYY-MM-DD"}}">{{date updated_at format="D MMM YYYY"}}</time></td>
+                <td><a href="{{url}}">{{title}}</a></td>
+                <td>{{authors autolink="false"}}</td>
+            </tr>
+            {{/foreach}}
+        {{else}}
+            <tr><td colspan="3">{{t "No corrections yet. When we correct an article, it is listed here."}}</td></tr>
+        {{/get}}
+        </tbody>
+    </table>
+</section>

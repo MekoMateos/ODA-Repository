@@ -1,0 +1,40 @@
+# Validates the theme on every pull request; deploys it to Ghost when merged to main.
+# Deploys run in the "production" environment: set it to require approval from a
+# second admin in GitHub > Settings > Environments (two-person rule).
+name: Theme
+
+on:
+  pull_request:
+    paths: ["theme/**"]
+  push:
+    branches: [main]
+    paths: ["theme/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check theme with gscan (Ghost's official validator)
+        run: npx --yes gscan@latest --fatal --verbose theme/oda
+
+  deploy:
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload and activate theme
+        uses: TryGhost/action-deploy-theme@v1
+        with:
+          api-url: ${{ secrets.GHOST_ADMIN_API_URL }}
+          api-key: ${{ secrets.GHOST_ADMIN_API_KEY }}
+          working-directory: theme/oda
+          theme-name: oda

@@ -1,0 +1,14 @@
+{{!< default}}
+{{#post}}
+<article class="article page-article">
+    {{#match @page.show_title_and_feature_image}}
+    <header class="article-head wrap-text">
+        <h1 class="article-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}
+    </header>
+    {{/match}}
+    <div class="gh-content article-body wrap-text">
+        {{content}}
+    </div>
+</article>
+{{/post}}

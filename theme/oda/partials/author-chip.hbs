@@ -1,0 +1,9 @@
+<a class="writer" href="{{url}}">
+    {{#if profile_image}}
+        <img class="avatar" src="{{img_url profile_image size="s"}}" alt="" loading="lazy">
+    {{else}}
+        <span class="avatar avatar-blank" aria-hidden="true">{{name}}</span>
+    {{/if}}
+    <span class="writer-name">{{name}}</span>
+    {{#if count.posts}}<span class="writer-count">{{plural count.posts empty="" singular=(t "% article") plural=(t "% articles")}}</span>{{/if}}
+</a>

@@ -1,1 +1,37 @@
-# ODA-Repository
+# ODA platform
+
+Multi-author civic publishing platform: magazine + author newsletters + review before publish.
+Built on self-hosted Ghost 6, behind Cloudflare, on a Hetzner server in the EU.
+
+## What's here
+
+| Folder | What it is |
+| --- | --- |
+| `theme/oda/` | Custom Ghost theme: front page, articles with evidence box, author pages, tags, corrections register, Albanian + English |
+| `infra/` | Production server: Docker Compose (Ghost, MySQL, Caddy), hardening, Cloudflare-only firewall, encrypted backups, restore |
+| `.github/workflows/` | Theme check + deploy; infra deploy with automatic rollback. Both need approval in the `production` environment |
+| `docs/runbooks/` | Step-by-step: first server setup, publishing workflow, restore, incidents |
+
+## How editors use the theme
+
+- **Evidence rating** (set by the Verification Desk, internal tags): `#verifikuar` = Verified, `#pjeserisht` = Partly verified, `#korrigjuar` = Corrected. The public tag `opinion` labels opinion pieces.
+- **Evidence box:** end the article with a heading **Burimet** (or *Sources*) and a numbered list of sources. The theme turns it into the evidence box and counts the sources.
+- **Corrections:** add `#korrigjuar` and a callout at the top explaining what changed. The article shows a correction note and appears on `/korrigjimet/`.
+- **Home page rails:** set the topic slugs in Ghost Admin > Design > Theme settings (`home_topics`).
+- **Language:** set Ghost's publication language to `sq`. English articles get the tag `english`.
+
+## Local development
+
+```bash
+npm i -g ghost-cli pnpm
+mkdir ghost-local && cd ghost-local && ghost install local
+ln -s ../theme/oda content/themes/oda && ghost restart
+npx gscan theme/oda        # must pass before every PR
+```
+
+## Security rules (non-negotiable)
+
+- Secrets live only in the server's `infra/.env` and in GitHub Actions secrets, never in the repo.
+- Every admin account uses a hardware security key. Two admins per account.
+- The technical admin is not an Editor. Editors publish; admins run the system.
+- Tips and complaints never go into Ghost, email or chat. They go to the separate GlobaLeaks server (phase 2).
