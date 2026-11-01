@@ -1,5 +1,6 @@
 // Server-rendered HTML. Every interpolated value is escaped by the `html` tag unless wrapped in raw().
 import { STATUSES, RATINGS, ROLES, CHECKLIST, availableActions, canTick, requiredItems } from './workflow.js';
+import { RESOURCE_CATEGORIES, RESOURCE_LANGS, REJECT_REASONS, isPollOpen } from './community.js';
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
@@ -28,10 +29,11 @@ const statusBadge = (s) => html`<span class="status st-${s}">${STATUSES[s]?.sq |
 const ratingBadge = (r) => r ? html`<span class="rating rt-${r}">${RATINGS[r]?.sq || r}</span>` : '';
 const isOverdue = (a) => a.deadline && !['published', 'scheduled', 'rejected'].includes(a.status) && Date.parse(a.deadline) < Date.now();
 
-export function layout({ user, title, active, body, flash, csrf }) {
+export function layout({ user, title, active, body, flash, csrf, badges = {} }) {
   const nav = [
     ...(user.role !== 'contributor' ? [['queue', '/', 'Radha']] : []),
     ['mine', '/te-miat', 'Artikujt e mi'],
+    ...(user.role === 'editor' ? [['resources', '/burime', 'Burime'], ['polls', '/sondazhe', 'Sondazhe']] : []),
     ...(['editor', 'admin'].includes(user.role) ? [['audit', '/regjistri', 'Regjistri']] : []),
     ...(user.role === 'admin' ? [['team', '/ekipi', 'Ekipi']] : []),
   ];
@@ -47,7 +49,7 @@ export function layout({ user, title, active, body, flash, csrf }) {
 <body data-csrf="${csrf}">
 <header class="bar">
   <a class="mark" href="/redaksia/">oda <span>redaksia</span></a>
-  <nav aria-label="Redaksia">${nav.map(([k, href, label]) => html`<a href="/redaksia${href}" ${raw(k === active ? 'aria-current="page"' : '')}>${label}</a>`)}</nav>
+  <nav aria-label="Redaksia">${nav.map(([k, href, label]) => html`<a href="/redaksia${href}" ${raw(k === active ? 'aria-current="page"' : '')}>${label}${badges[k] ? html` <span class="badge" title="Në pritje">${badges[k]}</span>` : ''}</a>`)}</nav>
   <p class="who"><span>${user.name}</span> <span class="role">${ROLES[user.role]}</span></p>
 </header>
 <main class="page">
@@ -222,6 +224,10 @@ function describe(h) {
   const map = {
     import: 'e solli nga Ghost', assign: 'ndryshoi caktimin', note: 'shtoi shënim',
     user_add: 'shtoi anëtar në ekip', user_update: 'ndryshoi rolin e një anëtari',
+    resource_approved: 'miratoi një burim për studentët', resource_rejected: 'refuzoi ose hoqi një burim',
+    resource_added: 'shtoi një burim për studentët', poll_create: 'shkroi një sondazh',
+    poll_open: 'hapi një sondazh', poll_close: 'mbylli një sondazh', poll_delete: 'fshiu një draft sondazhi',
+    resource_seed: 'shtoi listën fillestare të burimeve në pritje',
   };
   if (map[h.action]) return map[h.action];
   if (h.action === 'check' || h.action === 'uncheck') {
@@ -256,13 +262,128 @@ export function teamPage({ users }) {
 </table></div>`;
 }
 
+function detailText(detail) {
+  let d = {}; try { d = JSON.parse(detail || '{}'); } catch { return detail || ''; }
+  return d.question || d.url || d.email || '';
+}
+
 export function auditPage({ rows }) {
   return html`
 <div class="head"><h1>Regjistri i veprimeve</h1></div>
 <p class="hint">Çdo veprim regjistrohet këtu dhe nuk mund të ndryshohet ose fshihet.</p>
 <div class="table-wrap"><table class="queue">
-  <thead><tr><th scope="col">Koha</th><th scope="col">Kush</th><th scope="col">Veprimi</th><th scope="col">Artikulli</th></tr></thead>
+  <thead><tr><th scope="col">Koha</th><th scope="col">Kush</th><th scope="col">Veprimi</th><th scope="col">Për çfarë</th></tr></thead>
   <tbody>${rows.map(r => html`<tr><td class="muted">${fmtDate(r.at, true)}</td><td>${r.actor_name || r.actor_email}</td><td>${describe(r)}</td>
-    <td>${r.ghost_id ? html`<a href="/redaksia/artikull/${r.ghost_id}">Hap</a>` : html`<span class="sub">${r.detail || ''}</span>`}</td></tr>`)}</tbody>
+    <td>${r.ghost_id ? html`<a href="/redaksia/artikull/${r.ghost_id}">Hap</a>` : html`<span class="sub">${detailText(r.detail)}</span>`}</td></tr>`)}</tbody>
 </table></div>`;
+}
+
+// ---------- Student resources (suggested by readers, approved by editors) ----------
+const host = (u) => { try { return new URL(u).hostname; } catch { return u; } };
+const catOptions = (sel) => Object.entries(RESOURCE_CATEGORIES).map(([k, v]) => html`<option value="${k}" ${raw(k === sel ? 'selected' : '')}>${v}</option>`);
+
+export function resourcesPage({ tab, items, counts, siteUrl, names }) {
+  const tabs = [['pending', 'Në pritje'], ['approved', 'Në faqe'], ['rejected', 'Të refuzuara']];
+  const who = (email) => names[email] || email;
+  return html`
+<div class="head"><h1>Burime për studentë</h1>${siteUrl ? html`<p class="links"><a class="btn btn-quiet" href="${siteUrl}/burime/" target="_blank" rel="noopener">Shiko faqen publike</a></p>` : ''}</div>
+<p class="hint">Lexuesit sugjerojnë burime falas nga faqja publike. Asgjë nuk shfaqet pa miratimin e një redaktori. Hap lidhjen, kontrollo që është vërtet falas, e besueshme dhe pa kurthe pagese, pastaj mirato ose refuzo. Mund ta përmirësosh titullin dhe përshkrimin para miratimit.</p>
+<nav class="tabs" aria-label="Filtro burimet">
+  ${tabs.map(([k, label]) => html`<a href="/redaksia/burime?tab=${k}" ${raw(tab === k ? 'aria-current="true"' : '')}>${label} <span class="n">${counts[k] || 0}</span></a>`)}
+</nav>
+${items.length ? html`<ul class="res-list">${items.map(r => html`<li class="block res">
+  <div class="res-main">
+    <p class="res-host">${host(r.url)}</p>
+    <h2><a href="${r.url}" target="_blank" rel="noopener noreferrer nofollow">${r.title}</a></h2>
+    <p class="sub">${RESOURCE_CATEGORIES[r.category] || r.category} · ${RESOURCE_LANGS[r.language] || ''} · ${tab === 'pending'
+      ? html`sugjeruar ${fmtDate(r.created_at, true)} ${r.submitter_name ? html`nga ${r.submitter_name}` : 'pa emër'}`
+      : html`${tab === 'approved' ? 'miratuar' : 'refuzuar'} nga ${who(r.decided_by)}, ${fmtDate(r.decided_at, true)}`}</p>
+    ${r.description ? html`<p class="res-desc">${r.description}</p>` : ''}
+    ${tab === 'rejected' && r.reason ? html`<p class="sub">Arsyeja: ${r.reason}</p>` : ''}
+    <p class="sub res-url">${r.url}</p>
+  </div>
+  ${tab === 'pending' ? html`
+  <form method="post" action="/redaksia/burime/${String(r.id)}" class="grid-form res-approve">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><input type="hidden" name="tab" value="${tab}"><input type="hidden" name="decision" value="approve">
+    <label>Titulli <input name="title" value="${r.title}" required minlength="3" maxlength="120"></label>
+    <label>Kategoria <select name="category">${catOptions(r.category)}</select></label>
+    <label class="wide">Përshkrimi në faqe <textarea name="description" rows="2" maxlength="280">${r.description || ''}</textarea></label>
+    <label class="check"><input type="checkbox" name="featured" value="1"> Vendose në krye</label>
+    <button class="btn">Mirato dhe publiko</button>
+  </form>
+  <form method="post" action="/redaksia/burime/${String(r.id)}" class="inline-form">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><input type="hidden" name="tab" value="${tab}"><input type="hidden" name="decision" value="reject">
+    <label>Arsyeja <select name="reason">${REJECT_REASONS.map(x => html`<option>${x}</option>`)}</select></label>
+    <button class="btn btn-danger">Refuzo</button>
+  </form>` : tab === 'approved' ? html`
+  <form method="post" action="/redaksia/burime/${String(r.id)}" class="inline-form" data-confirm="Ta heqim këtë burim nga faqja publike?">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><input type="hidden" name="tab" value="${tab}"><input type="hidden" name="decision" value="reject"><input type="hidden" name="reason" value="U hoq nga redaksia">
+    ${r.featured ? html`<span class="status st-approved">Në krye</span>` : ''}
+    <button class="btn btn-quiet">Hiqe nga faqja</button>
+  </form>` : html`
+  <form method="post" action="/redaksia/burime/${String(r.id)}" class="inline-form">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><input type="hidden" name="tab" value="${tab}"><input type="hidden" name="decision" value="approve">
+    <button class="btn btn-quiet">Mirato gjithsesi</button>
+  </form>`}
+</li>`)}</ul>` : html`<p class="empty">${tab === 'pending' ? 'Asnjë sugjerim në pritje. Sugjerimet e reja nga lexuesit shfaqen këtu.' : 'Asgjë këtu ende.'}</p>`}
+<section class="block">
+  <h2>Shto vetë një burim</h2>
+  <form method="post" action="/redaksia/burime" class="grid-form">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}">
+    <label>Titulli <input name="title" required minlength="3" maxlength="120"></label>
+    <label>Lidhja <input name="url" type="url" required placeholder="https://"></label>
+    <label>Kategoria <select name="category">${catOptions('')}</select></label>
+    <label>Gjuha <select name="language">${Object.entries(RESOURCE_LANGS).map(([k, v]) => html`<option value="${k}">${v}</option>`)}</select></label>
+    <label class="wide">Përshkrimi <textarea name="description" rows="2" maxlength="280"></textarea></label>
+    <label class="check"><input type="checkbox" name="featured" value="1"> Vendose në krye</label>
+    <button class="btn">Shto në faqe</button>
+  </form>
+</section>`;
+}
+
+// ---------- Reader polls ----------
+export function pollsPage({ polls, tallies, names, siteUrl, user, editors }) {
+  const who = (email) => names[email] || email;
+  const badge = (p) => p.status === 'draft' ? html`<span class="status">Draft</span>`
+    : isPollOpen(p) ? html`<span class="status st-published">I hapur</span>` : html`<span class="status st-rejected">I mbyllur</span>`;
+  return html`
+<div class="head"><h1>Sondazhe</h1>${siteUrl ? html`<p class="links"><a class="btn btn-quiet" href="${siteUrl}/sondazhe/" target="_blank" rel="noopener">Shiko faqen publike</a></p>` : ''}</div>
+<p class="hint">Voton vetëm lexuesi i regjistruar, një herë për sondazh. Rezultati nuk është përfaqësues dhe faqja e thotë qartë. Shkruaj pyetje neutrale, me përgjigje që nuk e shtyjnë lexuesin drejt një anë. ${editors > 1 ? 'Sondazhin e hap një redaktor tjetër nga ai që e shkroi.' : ''}</p>
+<section class="block">
+  <h2>Sondazh i ri</h2>
+  <form method="post" action="/redaksia/sondazhe" class="poll-form">
+    <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}">
+    <label>Pyetja <input name="question" required minlength="8" maxlength="200" placeholder="P.sh. A duhet të transmetohen live mbledhjet e këshillit bashkiak?"></label>
+    <label>Sqarim për lexuesin (opsional) <textarea name="description" rows="2" maxlength="500" placeholder="Pse po pyesim dhe çfarë do të bëjmë me rezultatin."></textarea></label>
+    <label>Përgjigjet, një për rresht (2 deri në 6) <textarea name="options" rows="4" required placeholder="Po&#10;Jo&#10;Nuk e di"></textarea></label>
+    <label>Mbyllet më (ora e Tiranës, opsionale) <input type="datetime-local" name="closes_at"></label>
+    <button class="btn">Ruaje si draft</button>
+  </form>
+</section>
+${polls.length ? html`<ul class="res-list">${polls.map(p => {
+  const t = tallies[p.id];
+  const open = isPollOpen(p);
+  const mine = p.created_by === user.email && editors > 1;
+  return html`<li class="block poll">
+  <div class="poll-head"><h2>${p.question}</h2>${badge(p)}</div>
+  ${p.description ? html`<p class="res-desc">${p.description}</p>` : ''}
+  <ol class="tally">${t.options.map(o => html`<li><span class="lbl">${o.label}</span><meter min="0" max="100" value="${String(o.pct)}">${o.pct}%</meter><span class="n">${o.votes} · ${o.pct}%</span></li>`)}</ol>
+  <p class="sub">Shkruar nga ${who(p.created_by)} · ${t.total} vota${p.opened_at ? html` · hapur nga ${who(p.opened_by)}, ${fmtDate(p.opened_at, true)}` : ''}${p.closes_at ? html` · ${open || p.status === 'draft' ? 'mbyllet' : 'u mbyll'} ${fmtDate(p.closes_at, true)}` : p.closed_at ? html` · u mbyll ${fmtDate(p.closed_at, true)}` : ''}</p>
+  <div class="poll-actions">
+    ${p.status === 'draft' ? html`
+      <form method="post" action="/redaksia/sondazhe/${String(p.id)}/hap" data-confirm="Ta hapim sondazhin për lexuesit? Pyetja dhe përgjigjet nuk ndryshohen më pas.">
+        <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><button class="btn" ${raw(mine ? 'disabled title="Duhet ta hapë një redaktor tjetër"' : '')}>Hape për lexuesit</button>
+      </form>
+      <form method="post" action="/redaksia/sondazhe/${String(p.id)}/fshi" data-confirm="Ta fshijmë këtë draft?">
+        <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><button class="btn btn-quiet">Fshi draftin</button>
+      </form>
+      ${mine ? html`<p class="blocked">Ti e shkrove. Një redaktor tjetër duhet ta lexojë dhe ta hapë.</p>` : ''}`
+    : open ? html`
+      <form method="post" action="/redaksia/sondazhe/${String(p.id)}/mbyll" data-confirm="Ta mbyllim sondazhin tani? Rezultati bëhet publik dhe votimi ndalon.">
+        <input type="hidden" name="_csrf" value="${raw('{{csrf}}')}"><button class="btn btn-danger">Mbylle tani</button>
+      </form>` : ''}
+    ${siteUrl && p.status !== 'draft' ? html`<a class="btn btn-quiet" href="${siteUrl}/sondazhe/#${p.slug}" target="_blank" rel="noopener">Hap në faqe</a>` : ''}
+  </div>
+</li>`;
+})}</ul>` : html`<p class="empty">Ende asnjë sondazh. Shkruaj të parin më sipër.</p>`}`;
 }

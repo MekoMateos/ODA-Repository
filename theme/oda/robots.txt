@@ -6,6 +6,7 @@ Disallow: /p/
 Disallow: /email/
 Disallow: /r/
 Disallow: /members/api/
+Disallow: /api/
 Disallow: /webmentions/receive/
 Disallow: /faleminderit/
 Disallow: /*?artikulli=

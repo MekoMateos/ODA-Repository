@@ -12,10 +12,11 @@
     {{{block "head"}}}
     {{ghost_head}}
 </head>
-<body class="{{body_class}}">
+<body class="{{body_class}}" data-api="{{@custom.api_url}}">
 <a class="skip" href="#main">{{t "Skip to content"}}</a>
 
 <header class="site-head">
+    {{> "live-bar"}}
     <nav class="section-bar" aria-label="{{t "Sections"}}">
         {{navigation}}
     </nav>

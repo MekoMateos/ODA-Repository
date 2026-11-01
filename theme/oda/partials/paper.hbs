@@ -1,0 +1,14 @@
+{{!-- One research item, journal table-of-contents style --}}
+<li class="paper">
+    <time class="paper-date" datetime="{{date format="YYYY-MM-DD"}}"><span>{{date format="D MMM"}}</span> {{date format="YYYY"}}</time>
+    <div class="paper-main">
+        <h3 class="paper-title"><a href="{{url}}">{{title}}</a></h3>
+        <p class="paper-authors">{{authors separator=", " autolink="false"}}</p>
+        <p class="paper-abstract">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="40"}}{{/if}}</p>
+    </div>
+    <div class="paper-side">
+        {{> "proof"}}
+        <span class="paper-time">{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
+        <a class="paper-go" href="{{url}}" tabindex="-1" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h7M6 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+    </div>
+</li>

@@ -15,7 +15,7 @@
 </section>
 
 <section class="grid grid-3 latest" aria-label="{{t "Latest"}}">
-    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}+tag:-rastet" limit="6" include="authors,tags" as |latest|}}
+    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}+tag:-rastet+tag:-arti" limit="6" include="authors,tags" as |latest|}}
         {{#foreach latest}}{{> "card"}}{{/foreach}}
     {{/get}}
 </section>
@@ -43,12 +43,28 @@
 {{/if}}
 {{/get}}
 
+{{!-- Reader poll: filled in by oda.js from Redaksia; stays hidden when no poll is open --}}
+<section class="poll-band" data-poll-home hidden aria-labelledby="poll-band-h">
+    <div class="poll-band-head"><h2 id="poll-band-h">{{t "Reader poll"}}</h2><a class="more" href="{{@site.url}}/sondazhe/">{{t "All polls"}}</a></div>
+    <div class="poll-slot" data-poll-slot></div>
+</section>
+
 {{!-- Case studies: investigations followed to a result --}}
 {{#get "posts" filter="tag:rastet" limit="3" include="authors,tags" as |cases|}}
 {{#if cases}}
 <section class="impact" aria-labelledby="impact-h">
     <div class="topic-head"><h2 id="impact-h">{{t "Impact"}}</h2><p class="impact-dek">{{t "What happened after we published."}}</p><a class="more" href="{{@site.url}}/tag/rastet/">{{t "All cases"}}</a></div>
     <div class="cases">{{#foreach cases}}{{> "case-card"}}{{/foreach}}</div>
+</section>
+{{/if}}
+{{/get}}
+
+{{!-- Original research --}}
+{{#get "posts" filter="tag:kerkim" limit="3" include="authors,tags" as |papers|}}
+{{#if papers}}
+<section class="research-band" aria-labelledby="research-h">
+    <div class="topic-head"><h2 id="research-h"><a href="{{@site.url}}/tag/kerkim/">{{t "Research"}}</a></h2><p class="impact-dek">{{t "Original studies, with the method and the data."}}</p><a class="more" href="{{@site.url}}/tag/kerkim/">{{t "All research"}}</a></div>
+    <ul class="papers">{{#foreach papers}}{{> "paper"}}{{/foreach}}</ul>
 </section>
 {{/if}}
 {{/get}}
@@ -67,6 +83,23 @@
     {{/get}}
 </section>
 {{/foreach}}
+{{/get}}
+
+{{!-- Art: a scrolling gallery wall, images uncropped --}}
+{{#get "posts" filter="tag:arti" limit="8" as |works|}}
+{{#if works}}
+<section class="art-band" aria-labelledby="art-h">
+    <div class="topic-head"><h2 id="art-h"><a href="{{@site.url}}/tag/arti/">{{t "Art"}}</a></h2><a class="more" href="{{@site.url}}/tag/arti/">{{t "Open the gallery"}}</a></div>
+    <ul class="art-wall">
+        {{#foreach works}}
+        <li><a href="{{url}}">
+            {{#if feature_image}}<img src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">{{/if}}
+            <span class="art-cap"><span class="art-title">{{title}}</span><span class="art-by">{{authors separator=", " autolink="false"}}</span></span>
+        </a></li>
+        {{/foreach}}
+    </ul>
+</section>
+{{/if}}
 {{/get}}
 
 {{#if @custom.show_authors_on_home}}

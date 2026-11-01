@@ -5,6 +5,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY src ./src
 COPY public ./public
+COPY scripts ./scripts
+COPY seed ./seed
 RUN mkdir -p /data && chown node:node /data
 USER node
 ENV DB_FILE=/data/redaksia.db PORT=3000

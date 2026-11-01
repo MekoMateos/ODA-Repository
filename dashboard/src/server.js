@@ -8,6 +8,9 @@ import { authMiddleware, csrf as makeCsrf } from './auth.js';
 import { makeService, ActionError, canSee } from './service.js';
 import * as V from './views.js';
 import { STATUSES } from './workflow.js';
+import { communityStore, makeCommunity, CommunityError } from './community.js';
+import { memberVerifier } from './members.js';
+import { publicApi } from './public-api.js';
 
 const env = process.env;
 const isProd = env.NODE_ENV === 'production';
@@ -19,6 +22,9 @@ const db = openDb(env.DB_FILE || path.resolve('data/redaksia.db'));
 const ghost = ghostClient({ url: env.GHOST_ADMIN_URL, key: env.GHOST_ADMIN_API_KEY, publicUrl: env.GHOST_PUBLIC_ADMIN_URL });
 const svc = makeService({ db, ghost });
 const csrf = makeCsrf(env.SESSION_SECRET);
+const siteUrl = String(env.SITE_URL || '').replace(/\/$/, '');
+const store = communityStore(db);
+const community = makeCommunity({ db, store, secret: env.COMMUNITY_SECRET || env.SESSION_SECRET });
 
 // First run: the bootstrap admin can log in and add everyone else.
 if (env.BOOTSTRAP_ADMIN_EMAIL && !db.getUser(env.BOOTSTRAP_ADMIN_EMAIL)) {
@@ -44,6 +50,14 @@ app.use((req, res, next) => {
 const here = path.dirname(fileURLToPath(import.meta.url));
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 
+// Public reader API (resources and polls). Caddy forwards only /api/* from the public domain.
+app.use('/api', publicApi({
+  store, community,
+  verifyMember: memberVerifier({ siteUrl, jwksUrl: env.GHOST_JWKS_URL }),
+  allowedOrigins: String(env.PUBLIC_API_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+  turnstileSecret: env.TURNSTILE_SECRET,
+}));
+
 const r = express.Router();
 r.use('/static', express.static(path.join(here, '../public'), { maxAge: '1h' }));
 r.use(express.urlencoded({ extended: false, limit: '64kb' }));
@@ -54,7 +68,8 @@ r.use(csrf.verify);
 function render(req, res, { title, active, body, status = 200 }) {
   const flash = req.query.ok ? { type: 'ok', msg: String(req.query.ok).slice(0, 200) } : req.query.err ? { type: 'error', msg: String(req.query.err).slice(0, 300) } : null;
   const token = csrf.tokenFor(req.user.email);
-  const out = String(V.layout({ user: req.user, title, active, body, flash, csrf: token })).replaceAll('{{csrf}}', token);
+  const badges = req.user.role === 'editor' ? { resources: store.countResources().pending || 0 } : {};
+  const out = String(V.layout({ user: req.user, title, active, body, flash, csrf: token, badges })).replaceAll('{{csrf}}', token);
   res.status(status).type('html').send(out);
 }
 const back = (res, url, kind, msg) => res.redirect(303, `${url}${url.includes('?') ? '&' : '?'}${kind}=${encodeURIComponent(msg)}`);
@@ -134,6 +149,35 @@ r.get('/regjistri', (req, res) => {
   if (!['editor', 'admin'].includes(req.user.role)) return res.redirect(303, '/redaksia/');
   render(req, res, { title: 'Regjistri', active: 'audit', body: V.auditPage({ rows: db.recentAudit(300) }) });
 });
+
+// ----- Student resources and reader polls (editors only) -----
+const names = () => Object.fromEntries(db.listUsers().map(u => [u.email, u.name]));
+const editorsOnly = (req, res, next) => (req.user.role === 'editor' ? next() : res.redirect(303, '/redaksia/'));
+const community$ = (fn, url) => (req, res) => {
+  try { const msg = fn(req); back(res, url, 'ok', msg); }
+  catch (e) { if (!(e instanceof CommunityError)) throw e; back(res, url, 'err', e.message); }
+};
+
+r.get('/burime', editorsOnly, (req, res) => {
+  const tab = ['pending', 'approved', 'rejected'].includes(req.query.tab) ? req.query.tab : 'pending';
+  render(req, res, { title: 'Burime', active: 'resources', body: V.resourcesPage({ tab, items: store.listResources(tab), counts: store.countResources(), siteUrl, names: names() }) });
+});
+r.post('/burime', editorsOnly, community$((req) => { community.addDirect(req.user, req.body); return 'Burimi u shtua në faqe.'; }, '/redaksia/burime?tab=approved'));
+r.post('/burime/:id', editorsOnly, (req, res) => {
+  const tab = ['pending', 'approved', 'rejected'].includes(req.body.tab) ? req.body.tab : 'pending';
+  community$((q) => { community.decide(q.user, q.params.id, q.body); return q.body.decision === 'approve' ? 'Burimi u miratua dhe është në faqe.' : 'U ruajt.'; }, `/redaksia/burime?tab=${tab}`)(req, res);
+});
+
+r.get('/sondazhe', editorsOnly, (req, res) => {
+  store.closeExpired();
+  const polls = store.listPolls(['draft', 'open', 'closed']);
+  const tallies = Object.fromEntries(polls.map(p => [p.id, store.tallies(p.id)]));
+  render(req, res, { title: 'Sondazhe', active: 'polls', body: V.pollsPage({ polls, tallies, names: names(), siteUrl, user: req.user, editors: db.usersByRole('editor').length }) });
+});
+r.post('/sondazhe', editorsOnly, community$((req) => { community.createPoll(req.user, req.body); return 'Sondazhi u ruajt si draft.'; }, '/redaksia/sondazhe'));
+r.post('/sondazhe/:id/hap', editorsOnly, community$((req) => { community.openPoll(req.user, req.params.id); return 'Sondazhi është i hapur për lexuesit.'; }, '/redaksia/sondazhe'));
+r.post('/sondazhe/:id/mbyll', editorsOnly, community$((req) => { community.closePoll(req.user, req.params.id); return 'Sondazhi u mbyll. Rezultati është publik.'; }, '/redaksia/sondazhe'));
+r.post('/sondazhe/:id/fshi', editorsOnly, community$((req) => { community.deletePoll(req.user, req.params.id); return 'Drafti u fshi.'; }, '/redaksia/sondazhe'));
 
 app.use('/redaksia', r);
 app.get('/', (req, res) => res.redirect('/redaksia/'));

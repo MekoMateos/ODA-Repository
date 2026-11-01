@@ -36,6 +36,7 @@ In Ghost, each status is mirrored as an internal tag (`#submitted`, `#in-review`
 2. `REDAKSIA_SESSION_SECRET=$(openssl rand -base64 48)`.
 3. Cloudflare Zero Trust > Access > the application for `admin.<domain>`: copy the **AUD tag** into `REDAKSIA_CF_ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`) into `CF_ACCESS_TEAM_DOMAIN`.
 4. `REDAKSIA_BOOTSTRAP_ADMIN_EMAIL` = your own email (the one you log in to Cloudflare Access with).
+   Optional: `REDAKSIA_COMMUNITY_SECRET=$(openssl rand -base64 48)` for poll votes (never change it while a poll is open) and `TURNSTILE_SECRET` for the resource form.
 5. `docker compose up -d --build redaksia`, open `/redaksia/ekipi`, add the editors, verifiers, legal and contributors. Contributors must use the **same email** as their Ghost staff account so their drafts show up.
 
 ## Local development
@@ -48,3 +49,7 @@ SESSION_SECRET=$(openssl rand -base64 48) DEV_USER_EMAIL=you@example.org npm run
 ```
 
 `DEV_USER_EMAIL` is refused when `NODE_ENV=production`, and production refuses to start without Cloudflare Access settings.
+
+## Polls and student resources
+
+Editors also get **Burime** (reader suggestions waiting for approval, with a red counter) and **Sondazhe** (write, open and close reader polls) in the menu. The public site reads them from `/api/` on the public domain; Caddy forwards only that path to Redaksia. Rules and formats: [community.md](community.md).

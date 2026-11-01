@@ -1,10 +1,12 @@
 {{!< default}}
 {{#post}}
-<article class="article {{post_class}}">
+<article class="article {{post_class}}"{{#has tag="#live"}} data-live{{/has}}{{#has tag="protesta,#live"}} data-timeline{{/has}}>
     <header class="article-head">
+        {{#has tag="#live"}}<p class="live-flag"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></p>{{/has}}
+        {{#has tag="Kërkim,kerkim"}}<p class="research-kicker">{{t "ODA research"}}</p>{{/has}}
         <div class="article-kicker">{{> "proof"}}</div>
         <h1 class="article-title">{{title}}</h1>
-        {{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}
+        {{#has tag="Kërkim,kerkim"}}{{else}}{{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}{{/has}}
         <div class="article-byline">
             <span class="byline-authors">{{#foreach authors}}<a href="{{url}}">{{name}}</a>{{#unless @last}}, {{/unless}}{{/foreach}}</span>
             <span class="byline-meta"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time></span>
@@ -25,6 +27,13 @@
         <button class="box-btn share" type="button" data-share>{{t "Share"}}</button>
     </div>
 
+    {{#has tag="Kërkim,kerkim"}}{{#if custom_excerpt}}
+    <aside class="abstract" aria-labelledby="abstract-h">
+        <h2 id="abstract-h">{{t "Abstract"}}</h2>
+        <p>{{custom_excerpt}}</p>
+    </aside>
+    {{/if}}{{/has}}
+
     {{#has tag="#korrigjuar"}}
     <aside class="correction-note" role="note">
         <p><strong>{{t "Corrected."}}</strong> {{t "This article was changed after publication. What changed and why is in the corrections register."}} <a href="{{@site.url}}/korrigjimet/">{{t "See corrections"}}</a></p>
@@ -36,6 +45,14 @@
     </div>
 
     <footer class="article-foot">
+        {{#has tag="Kërkim,kerkim"}}
+        <aside class="cite" data-cite data-title="{{title}}" data-date="{{date format="YYYY-MM-DD"}}" data-url="{{url absolute="true"}}" data-authors="{{#foreach authors}}{{name}}{{#unless @last}}|{{/unless}}{{/foreach}}">
+            <h2 class="cite-h">{{t "How to cite"}}</h2>
+            <p class="cite-text" data-cite-text>{{authors separator=", " autolink="false"}} ({{date format="YYYY"}}). {{title}}. ODA. {{url absolute="true"}}</p>
+            <div class="cite-row"><button class="box-btn" type="button" data-cite-copy>{{t "Copy citation"}}</button><span class="cite-style">APA</span></div>
+            <p class="cite-note">{{t "Checked by ODA's editors before publication. This is not a peer-reviewed journal article."}}</p>
+        </aside>
+        {{/has}}
         <p class="report">{{t "Spotted an error?"}} <a href="{{@site.url}}/korrigjimet/?artikulli={{encode url}}">{{t "Request a correction"}}</a></p>
         {{#foreach authors}}
         <div class="author-box">
@@ -56,12 +73,14 @@
     {{/if}}
 </article>
 
+{{#get "posts" filter="tags:{{primary_tag.slug}}+id:-{{id}}" limit="3" include="authors,tags" as |related|}}
+{{#if related}}
 <section class="read-next" aria-labelledby="more-h">
     <div class="topic-head"><h2 id="more-h">{{t "Read next"}}</h2></div>
     <div class="grid grid-3">
-    {{#get "posts" filter="tags:{{primary_tag.slug}}+id:-{{id}}" limit="3" include="authors,tags" as |related|}}
         {{#foreach related}}{{> "card"}}{{/foreach}}
-    {{/get}}
     </div>
 </section>
+{{/if}}
+{{/get}}
 {{/post}}

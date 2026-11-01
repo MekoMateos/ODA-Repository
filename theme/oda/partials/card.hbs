@@ -8,6 +8,7 @@
     </a>
     {{/if}}
     <div class="card-body">
+        {{#has tag="#live"}}<span class="live-flag card-live"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></span>{{/has}}
         {{#match size "hero"}}{{#primary_tag}}<a class="card-kicker" href="{{url}}">{{name}}</a>{{/primary_tag}}{{/match}}
         <div class="card-top">
             <h3 class="card-title"><a href="{{url}}">{{title}}</a></h3>

@@ -1,0 +1,28 @@
+{{!< default}}
+{{!-- Art: a gallery wall. Images are never cropped; the work keeps its own proportions. --}}
+<section class="gallery-page">
+    {{#tag}}
+    <header class="gallery-head">
+        <h1 class="gallery-title">{{name}}</h1>
+        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
+    </header>
+    {{/tag}}
+    <div class="gallery">
+        {{#foreach posts}}
+        <article class="art{{#unless feature_image}} art-text{{/unless}}">
+            <a class="art-link" href="{{url}}">
+                {{#if feature_image}}
+                <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
+                     sizes="(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw" src="{{img_url feature_image size="m"}}"
+                     alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">
+                {{/if}}
+                <span class="art-cap">
+                    <span class="art-title">{{title}}</span>
+                    <span class="art-by">{{authors separator=", " autolink="false"}}</span>
+                </span>
+            </a>
+        </article>
+        {{/foreach}}
+    </div>
+    <div class="wrap">{{pagination}}</div>
+</section>

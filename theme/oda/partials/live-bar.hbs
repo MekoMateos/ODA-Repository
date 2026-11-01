@@ -1,0 +1,14 @@
+{{!-- Breaking bar: shown on every page while a post carries the internal tag #live. Remove the tag and it disappears. --}}
+{{#get "posts" filter="tag:hash-live" limit="1" fields="title,url,slug,updated_at" as |live|}}
+{{#foreach live}}
+<div class="live-bar" data-live-bar="{{slug}}">
+    <a class="live-bar-link" href="{{url}}">
+        <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span>
+        <span class="live-bar-title">{{title}}</span>
+        <span class="live-bar-go hide-s">{{t "Follow the updates"}}</span>
+    </a>
+    <button class="live-bar-x" type="button" data-live-x aria-label="{{t "Hide"}}"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="2"/></svg></button>
+</div>
+<script>try{if(localStorage.getItem("oda-live-x")==="{{slug}}")document.currentScript.previousElementSibling.hidden=true}catch(e){}</script>
+{{/foreach}}
+{{/get}}

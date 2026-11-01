@@ -148,3 +148,33 @@ input[type=checkbox], input[type=radio] { width: auto; }
   .page { padding: 1rem; }
   .steps li { font-size: .75rem; }
 }
+
+/* Burime and Sondazhe */
+.badge { display: inline-block; min-width: 1.3em; padding: 0 .35em; border-radius: 99px; background: #E41E20; color: #fff; font-size: .72rem; font-weight: 700; text-align: center; line-height: 1.45; }
+.res-list { list-style: none; padding: 0; margin: 0; }
+.res { display: grid; gap: .9rem; }
+.res-host { margin: 0; font-size: .8rem; font-weight: 600; color: var(--walnut-ink); }
+.res h2 { font-size: 1.05rem; margin: .1rem 0 .25rem; }
+.res h2 a { text-decoration: none; } .res h2 a:hover { text-decoration: underline; }
+.res-desc { margin: .5rem 0 0; max-width: 60ch; }
+.res-url { word-break: break-all; margin-top: .35rem; }
+.res-approve { padding-top: .9rem; border-top: 1px solid var(--rule); }
+.grid-form .wide { grid-column: 1 / -1; }
+.inline-form { display: flex; gap: .6rem; align-items: end; flex-wrap: wrap; margin: 0; }
+.inline-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .85rem; font-weight: 600; }
+.inline-form select { width: auto; }
+.poll-form { display: grid; gap: .75rem; max-width: 46rem; }
+.poll-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .85rem; font-weight: 600; }
+.poll-form input[type=datetime-local] { max-width: 16rem; }
+.poll-form .btn { justify-self: start; }
+.poll-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.poll-head h2 { margin: 0; font-size: 1.1rem; }
+.tally { list-style: none; padding: 0; margin: .9rem 0 .6rem; display: grid; gap: .45rem; max-width: 46rem; }
+.tally li { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto; gap: .75rem; align-items: center; font-size: .92rem; }
+.tally meter { width: 100%; height: .8rem; }
+.tally .n { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: .85rem; white-space: nowrap; }
+.poll-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.poll-actions form { margin: 0; }
+@media (max-width: 640px) { .tally li { grid-template-columns: 1fr auto; } .tally meter { grid-column: 1 / -1; grid-row: 2; } }
+textarea, input, select { font-weight: 400; }
+@media (max-width: 640px) { .bar nav { flex-wrap: wrap; row-gap: .35rem; column-gap: 1rem; } }

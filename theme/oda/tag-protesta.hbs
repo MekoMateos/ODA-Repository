@@ -1,0 +1,53 @@
+{{!< default}}
+{{!-- Protests: live coverage first, then the rights guide, then everything we have published, newest first --}}
+<section class="protest-page">
+    {{#tag}}
+    <header class="protest-head wrap">
+        <h1 class="listing-title">{{name}}</h1>
+        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
+    </header>
+    {{/tag}}
+
+    {{#get "posts" filter="tag:hash-live+tag:protesta" limit="3" as |live|}}
+    {{#if live}}
+    <div class="live-now">
+        {{#foreach live}}
+        <a class="live-card" href="{{url}}">
+            <span class="live-flag"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></span>
+            <span class="live-card-title">{{title}}</span>
+            {{#if custom_excerpt}}<span class="live-card-dek">{{custom_excerpt}}</span>{{/if}}
+            <span class="live-card-go">{{t "Follow the updates"}}</span>
+        </a>
+        {{/foreach}}
+    </div>
+    {{/if}}
+    {{/get}}
+
+    <div class="protest-aside wrap">
+        {{#get "pages" filter="slug:te-drejtat-ne-proteste" limit="1" as |rights|}}{{#foreach rights}}
+        <a class="rights-card" href="{{url}}"><span class="rights-title">{{title}}</span>{{#if custom_excerpt}}<span class="rights-dek">{{custom_excerpt}}</span>{{/if}}</a>
+        {{/foreach}}{{/get}}
+        <div class="protest-rules">
+            <p><strong>{{t "We report protests. We do not organise or promote them."}}</strong></p>
+            <p>{{t "In live coverage, every update says whether it is confirmed or still being checked. Reports from the field stay “Being checked” until we confirm them with a second source."}}</p>
+        </div>
+    </div>
+
+    <div class="protest-list wrap">
+        <h2 class="rail-title">{{t "All protest coverage"}}</h2>
+        <ol class="timeline" reversed>
+            {{#foreach posts}}
+            <li class="tl-item{{#has tag="#live"}} tl-live{{/has}}">
+                <time class="tl-date" datetime="{{date format="YYYY-MM-DD"}}"><span class="tl-day">{{date format="D"}}</span> <span class="tl-month">{{date format="MMM YYYY"}}</span></time>
+                <div class="tl-body">
+                    {{#has tag="#live"}}<span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span>{{/has}}
+                    <h3 class="tl-title"><a href="{{url}}">{{title}}</a></h3>
+                    <p class="tl-dek">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="30"}}{{/if}}</p>
+                    {{> "proof"}}
+                </div>
+            </li>
+            {{/foreach}}
+        </ol>
+        {{pagination}}
+    </div>
+</section>

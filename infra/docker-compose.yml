@@ -81,6 +81,11 @@ services:
       CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN}
       CF_ACCESS_AUD: ${REDAKSIA_CF_ACCESS_AUD}
       BOOTSTRAP_ADMIN_EMAIL: ${REDAKSIA_BOOTSTRAP_ADMIN_EMAIL}
+      # Reader API (/api on the public domain): polls and student resources
+      SITE_URL: https://${DOMAIN}
+      GHOST_JWKS_URL: http://ghost:2368/members/.well-known/jwks.json
+      COMMUNITY_SECRET: ${REDAKSIA_COMMUNITY_SECRET:-}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
     volumes:
       - redaksia_data:/data
     networks: [internal]

@@ -1,7 +1,7 @@
 {
   "name": "oda",
   "description": "ODA: multi-author civic magazine theme. Section bar, condensed headlines, card grid, short takes, coloured category sections, evidence boxes, corrections register.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "UNLICENSED",
   "private": true,
   "author": {
@@ -55,6 +55,16 @@
         "type": "boolean",
         "default": true,
         "description": "Small notice that only necessary cookies are used"
+      },
+      "api_url": {
+        "type": "text",
+        "default": "/api",
+        "description": "Reader API for polls and student resources. Keep /api in production."
+      },
+      "turnstile_site_key": {
+        "type": "text",
+        "default": "",
+        "description": "Optional Cloudflare Turnstile key for the resource form."
       }
     }
   }

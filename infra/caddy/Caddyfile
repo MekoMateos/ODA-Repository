@@ -34,6 +34,12 @@
 		reverse_proxy ghost:2368
 	}
 
+	# Reader API served by Redaksia: approved student resources and reader polls. Nothing else of Redaksia
+	# is reachable from the public domain; the editors' screens stay behind Cloudflare Access on the admin domain.
+	handle /api/* {
+		reverse_proxy redaksia:3000
+	}
+
 	handle {
 		reverse_proxy ghost:2368
 	}

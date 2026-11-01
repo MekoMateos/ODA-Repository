@@ -1,0 +1,17 @@
+{{!< default}}
+{{!-- Reader polls. Questions are written and opened by the editors in Redaksia. --}}
+{{#post}}
+<article class="polls-page">
+    <header class="polls-hero wrap">
+        <h1 class="listing-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="listing-dek">{{custom_excerpt}}</p>{{/if}}
+        <ul class="poll-facts">
+            <li><strong>{{t "One vote per reader."}}</strong> {{t "Sign in with your email to vote. No password needed."}}</li>
+            <li><strong>{{t "Not representative."}}</strong> {{t "It counts readers who chose to vote, not the population."}}</li>
+            <li><strong>{{t "Results after you vote."}}</strong> {{t "Or when the poll closes, so early numbers do not sway anyone."}}</li>
+        </ul>
+    </header>
+    <div class="polls wrap" data-polls><p class="res-loading">{{t "Loading polls..."}}</p></div>
+    {{#if html}}<div class="gh-content polls-method wrap-text">{{content}}</div>{{/if}}
+</article>
+{{/post}}

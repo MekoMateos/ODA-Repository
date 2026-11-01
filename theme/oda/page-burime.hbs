@@ -1,0 +1,55 @@
+{{!< default}}
+{{!-- Free resources for students. The list comes from Redaksia: readers suggest, editors approve. --}}
+{{#post}}
+<article class="res-page">
+    <header class="res-hero wrap">
+        <h1 class="listing-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="listing-dek">{{custom_excerpt}}</p>{{/if}}
+        <a class="pill pill-dark res-jump" href="#sugjero">{{t "Suggest a resource"}}</a>
+    </header>
+
+    <div class="res-app wrap" data-resources>
+        <div class="res-tools">
+            <label class="res-search"><span class="sr-only">{{t "Search resources"}}</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" placeholder="{{t "Search: statistics, LaTeX, scholarship"}}" data-res-q autocomplete="off">
+            </label>
+            <label class="res-lang"><span>{{t "Language"}}</span>
+                <select data-res-lang><option value="">{{t "All"}}</option><option value="sq">Shqip</option><option value="en">Anglisht</option></select>
+            </label>
+        </div>
+        <div class="res-chips" role="group" aria-label="{{t "Categories"}}" data-res-cats></div>
+        <p class="res-count" aria-live="polite" data-res-count></p>
+        <div data-res-list><p class="res-loading">{{t "Loading resources..."}}</p></div>
+    </div>
+
+    {{#if html}}<div class="gh-content res-intro wrap-text">{{content}}</div>{{/if}}
+
+    <section class="res-suggest" id="sugjero" aria-labelledby="sugjero-h">
+        <div class="res-suggest-text">
+            <h2 id="sugjero-h">{{t "Suggest a resource"}}</h2>
+            <p>{{t "Know a free course, book, tool or scholarship that helped you? Send it. An editor opens every link before it appears here."}}</p>
+            <ul class="res-rules">
+                <li>{{t "Free, or with a real free plan"}}</li>
+                <li>{{t "From a source you would trust with your studies"}}</li>
+                <li>{{t "We do not ask for your email. Your name is optional and shown with the resource."}}</li>
+            </ul>
+        </div>
+        <form class="res-form" data-res-form novalidate>
+            <label>{{t "Name of the resource"}} <input name="title" required minlength="3" maxlength="120" autocomplete="off"></label>
+            <label>{{t "Link"}} <input name="url" type="url" required placeholder="https://" inputmode="url" autocomplete="off"></label>
+            <div class="res-form-row">
+                <label>{{t "Category"}} <select name="category" required data-res-catselect><option value="">{{t "Choose"}}</option></select></label>
+                <label>{{t "Language"}} <select name="language"><option value="sq">Shqip</option><option value="en" selected>Anglisht</option><option value="tjeter">{{t "Other"}}</option></select></label>
+            </div>
+            <label>{{t "Why is it useful? (optional)"}} <textarea name="description" maxlength="280" rows="3"></textarea></label>
+            <label>{{t "Your name (optional)"}} <input name="submitter_name" maxlength="60" autocomplete="off"></label>
+            <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+            {{#if @custom.turnstile_site_key}}<div class="cf-turnstile" data-sitekey="{{@custom.turnstile_site_key}}" data-theme="dark"></div>{{/if}}
+            <button class="btn" type="submit">{{t "Send for review"}}</button>
+            <p class="res-form-msg" role="status" data-res-msg></p>
+        </form>
+    </section>
+</article>
+{{/post}}
+{{#if @custom.turnstile_site_key}}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{{/if}}
