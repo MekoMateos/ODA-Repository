@@ -45,7 +45,13 @@
 	import security_headers
 	header X-Robots-Tag "noindex, nofollow"
 
-	@nonadmin not path /ghost /ghost/* /content/images/* /assets/* /public/*
+	# Editorial dashboard (ODA Redaksia). Cloudflare Access protects the whole admin domain;
+	# the dashboard also verifies the Access token itself.
+	handle /redaksia* {
+		reverse_proxy redaksia:3000
+	}
+
+	@nonadmin not path /ghost /ghost/* /content/images/* /assets/* /public/* /redaksia*
 	redir @nonadmin https://{$DOMAIN}{uri} 302
 
 	reverse_proxy ghost:2368

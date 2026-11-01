@@ -68,6 +68,27 @@ services:
       timeout: 5s
       retries: 10
 
+  redaksia:
+    build: ../dashboard
+    restart: unless-stopped
+    depends_on: [ghost]
+    environment:
+      NODE_ENV: production
+      GHOST_ADMIN_URL: http://ghost:2368
+      GHOST_PUBLIC_ADMIN_URL: https://${ADMIN_DOMAIN}
+      GHOST_ADMIN_API_KEY: ${REDAKSIA_GHOST_ADMIN_API_KEY}
+      SESSION_SECRET: ${REDAKSIA_SESSION_SECRET}
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN}
+      CF_ACCESS_AUD: ${REDAKSIA_CF_ACCESS_AUD}
+      BOOTSTRAP_ADMIN_EMAIL: ${REDAKSIA_BOOTSTRAP_ADMIN_EMAIL}
+    volumes:
+      - redaksia_data:/data
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -85,6 +106,7 @@ services:
     networks: [internal]
 
 volumes:
+  redaksia_data:
   ghost_content:
   db_data:
   caddy_data:

@@ -22,6 +22,12 @@ docker compose stop ghost
 gunzip -c "$DB" | docker compose exec -T db sh -c 'exec mysql -u root -p"$MYSQL_ROOT_PASSWORD" ghost'
 docker run --rm -v infra_ghost_content:/content -v "$(dirname "$CONTENT")":/in alpine \
   sh -c "rm -rf /content/* && tar xzf /in/$(basename "$CONTENT") -C /content && chown -R 1000:1000 /content"
+REDAKSIA=$(find "$WORK" -name 'redaksia-*.db' | sort | tail -1)
 docker compose up -d
+if [ -f "$REDAKSIA" ]; then
+  docker compose stop redaksia
+  docker compose cp "$REDAKSIA" redaksia:/data/redaksia.db
+  docker compose start redaksia
+fi
 rm -rf "$WORK"
 echo "Restored snapshot $SNAP."

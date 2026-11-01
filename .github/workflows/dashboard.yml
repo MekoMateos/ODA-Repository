@@ -1,0 +1,33 @@
+# Tests the editorial dashboard on every change. Deployment happens through the
+# Infrastructure workflow (docker compose builds the dashboard image on the server).
+name: Dashboard
+
+on:
+  pull_request:
+    paths: ["dashboard/**"]
+  push:
+    branches: [main]
+    paths: ["dashboard/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - name: Dependency audit (fails on high/critical)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Image builds
+        run: docker build -t oda-redaksia .

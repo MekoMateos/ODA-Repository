@@ -1,0 +1,21 @@
+{
+  "name": "oda-redaksia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ODA editorial dashboard: submission queue, review statuses, sign-offs and audit log on top of Ghost.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "NODE_ENV=development node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/workflow.test.js"
+  },
+  "dependencies": {
+    "@tryghost/admin-api": "1.14.14",
+    "express": "5.2.1",
+    "jose": "6.2.0",
+    "axios": "1.20.0"
+  }
+}

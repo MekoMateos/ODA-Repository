@@ -10,3 +10,4 @@
 8. **Cloudflare rules:** rate limit `/members/api/*` (10 req/min per IP) and `/ghost/api/admin/session*` (5/min). Turn on Bot Fight Mode. Cache everything on the public domain except `/ghost/*`, `/members/*`, `/p/*` and requests with the `ghost-members-ssr` cookie.
 9. **Backups:** `crontab -e` as deploy: `15 3 * * * /opt/oda/infra/scripts/backup.sh >> /opt/oda/backup.log 2>&1` and `0 4 1 * * sudo /opt/oda/infra/scripts/cf-firewall.sh`.
 10. **Theme:** create a Ghost custom integration (Settings > Integrations), put its Admin API URL + key into GitHub secrets, merge to main, approve the deploy.
+11. **Redaksia (editorial dashboard):** follow [redaksia.md](redaksia.md) > Setup on the server.

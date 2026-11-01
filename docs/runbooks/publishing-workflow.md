@@ -12,6 +12,6 @@
 | Rejected | Editor | `#rejected` + reason |
 
 Remove workflow tags (`#submitted` … `#approved`) at publish; keep the rating tag.
-The editorial dashboard (next build step) shows this queue and logs every change.
+These tags are set automatically by ODA Redaksia (`/redaksia/` on the admin domain); see [redaksia.md](redaksia.md).
 
 Checklist before an Editor publishes: every claim has a primary document or two independent sources; rating set; legal OK logged; personal data checked; images cleared; Burimet section present; two approvals recorded.

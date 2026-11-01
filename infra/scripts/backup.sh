@@ -16,8 +16,13 @@ docker compose exec -T db sh -c 'exec mysqldump --single-transaction --routines 
 docker run --rm -v infra_ghost_content:/content:ro -v "$LOCAL":/out alpine \
   tar czf "/out/content-$STAMP.tar.gz" -C /content .
 
+# Editorial dashboard DB (workflow state + audit log), consistent copy via SQLite's backup command
+docker compose exec -T redaksia node -e "const {DatabaseSync}=require('node:sqlite');new DatabaseSync('/data/redaksia.db').exec(\"VACUUM INTO '/data/snapshot.db'\")"
+docker compose cp redaksia:/data/snapshot.db "$LOCAL/redaksia-$STAMP.db"
+docker compose exec -T redaksia rm -f /data/snapshot.db
+
 restic snapshots >/dev/null 2>&1 || restic init
-restic backup "$LOCAL/db-$STAMP.sql.gz" "$LOCAL/content-$STAMP.tar.gz" --tag nightly
+restic backup "$LOCAL/db-$STAMP.sql.gz" "$LOCAL/content-$STAMP.tar.gz" "$LOCAL/redaksia-$STAMP.db" --tag nightly
 restic forget --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
 
 # Local copies: keep 7 days
