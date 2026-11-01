@@ -1,0 +1,18 @@
+{{!< default}}
+{{!-- FAQ page. Editors write each question as a heading (H3) followed by its answer.
+      oda.js turns them into an accordion and adds FAQPage structured data for Google. --}}
+{{#post}}
+<article class="article page-article faq-page">
+    <header class="article-head">
+        <h1 class="article-title">{{title}}</h1>
+        {{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}
+    </header>
+    <div class="gh-content article-body faq-body" data-faq>
+        {{content}}
+    </div>
+    <aside class="faq-more">
+        <p>{{t "Didn't find your answer?"}}</p>
+        <a class="pill pill-dark" href="{{@site.url}}/rreth/#kontakt">{{t "Contact the editors"}}</a>
+    </aside>
+</article>
+{{/post}}

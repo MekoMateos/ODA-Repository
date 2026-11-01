@@ -1,0 +1,27 @@
+{{!-- Breadcrumbs with schema.org microdata (Google reads it for search results). Not shown on the home page. --}}
+{{#is "post"}}{{#post}}
+<nav class="crumbs" aria-label="{{t "Breadcrumb"}}">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{@site.url}}"><span itemprop="name">{{t "Home"}}</span></a><meta itemprop="position" content="1"></li>
+        {{#primary_tag}}<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{url}}"><span itemprop="name">{{name}}</span></a><meta itemprop="position" content="2"></li>{{/primary_tag}}
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name">{{title}}</span><meta itemprop="item" content="{{url absolute="true"}}"><meta itemprop="position" content="{{#if primary_tag}}3{{else}}2{{/if}}"></li>
+    </ol>
+</nav>
+{{/post}}{{/is}}
+{{#is "page"}}{{#post}}
+<nav class="crumbs" aria-label="{{t "Breadcrumb"}}">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{@site.url}}"><span itemprop="name">{{t "Home"}}</span></a><meta itemprop="position" content="1"></li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name">{{title}}</span><meta itemprop="item" content="{{url absolute="true"}}"><meta itemprop="position" content="2"></li>
+    </ol>
+</nav>
+{{/post}}{{/is}}
+{{#is "tag"}}{{#tag}}
+<nav class="crumbs" aria-label="{{t "Breadcrumb"}}">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{@site.url}}"><span itemprop="name">{{t "Home"}}</span></a><meta itemprop="position" content="1"></li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name">{{name}}</span><meta itemprop="item" content="{{url absolute="true"}}"><meta itemprop="position" content="2"></li>
+    </ol>
+</nav>
+{{/tag}}{{/is}}
+

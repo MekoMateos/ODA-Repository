@@ -8,6 +8,8 @@
     <link rel="preload" href="{{asset "fonts/barlow-condensed-latin-700-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{asset "fonts/familjen-grotesk-latin-wght-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{asset "css/oda.css"}}">
+    <meta name="theme-color" content="#000000">
+    {{{block "head"}}}
     {{ghost_head}}
 </head>
 <body class="{{body_class}}">
@@ -39,6 +41,7 @@
 </header>
 
 <main id="main">
+{{> "breadcrumbs"}}
 {{{body}}}
 </main>
 
@@ -50,6 +53,9 @@
         <p class="foot-copy">&copy; {{date format="YYYY"}} {{@site.title}}</p>
     </div>
 </footer>
+
+{{#if @site.members_enabled}}{{#unless @member}}{{> "newsletter-popup"}}{{> "sticky-cta"}}{{/unless}}{{/if}}
+{{#if @custom.show_cookie_notice}}{{> "cookie-notice"}}{{/if}}
 
 <script src="{{asset "js/oda.js"}}" defer></script>
 {{ghost_foot}}

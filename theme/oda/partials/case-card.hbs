@@ -1,0 +1,7 @@
+<article class="case {{post_class}}">
+    <a class="case-link" href="{{url}}">
+        <h3 class="case-title">{{title}}</h3>
+        {{#if custom_excerpt}}<p class="case-result"><span class="case-label">{{t "Result"}}</span> {{custom_excerpt}}</p>{{/if}}
+        <span class="case-meta">{{authors separator=", " autolink="false"}}, <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM YYYY"}}</time></span>
+    </a>
+</article>

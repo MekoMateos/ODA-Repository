@@ -1,0 +1,13 @@
+# ODA robots.txt (served by Ghost from the theme).
+# Replace oda.example.org with the real domain before going live.
+User-agent: *
+Disallow: /ghost/
+Disallow: /p/
+Disallow: /email/
+Disallow: /r/
+Disallow: /members/api/
+Disallow: /webmentions/receive/
+Disallow: /faleminderit/
+Disallow: /*?artikulli=
+
+Sitemap: https://oda.example.org/sitemap.xml

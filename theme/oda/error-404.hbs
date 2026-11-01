@@ -1,0 +1,15 @@
+{{!< default}}
+{{#contentFor "head"}}<meta name="robots" content="noindex">{{/contentFor}}
+<section class="nf">
+    <p class="nf-code" aria-hidden="true">404</p>
+    <div class="nf-body">
+        <h1>{{t "This page isn't here"}}</h1>
+        <p>{{t "The link may be old, or the article may have moved. Search the archive or start from a section."}}</p>
+        <div class="nf-actions">
+            <button class="btn" type="button" data-ghost-search>{{t "Search ODA"}}</button>
+            <a class="pill" href="{{@site.url}}">{{t "Front page"}}</a>
+        </div>
+        <nav class="nf-sections" aria-label="{{t "Sections"}}">{{navigation}}</nav>
+        <p class="nf-small">{{t "Expected to find something here? Tell us at"}} <a href="{{@site.url}}/korrigjimet/">{{t "the corrections page"}}</a>.</p>
+    </div>
+</section>

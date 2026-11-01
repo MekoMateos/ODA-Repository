@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "title": "ODA",
+    "description": "Platformë e pavarur publikimi. Hulumtime, analiza dhe shpjegues me interes publik, ku çdo fakt ka burim.",
+    "meta_title": "ODA | Publikim i pavarur, çdo fakt me burim",
+    "meta_description": "ODA publikon hulumtime, analiza dhe shpjegues me interes publik. Çdo artikull verifikohet dhe çdo fakt lidhet me burimin e vet.",
+    "og_description": "Hulumtime, analiza dhe shpjegues me interes publik. Çdo fakt me burim.",
+    "locale": "sq",
+    "navigation": [
+      { "label": "Politikë", "url": "/tag/politike/" },
+      { "label": "Ekonomi", "url": "/tag/ekonomi/" },
+      { "label": "Drejtësi", "url": "/tag/drejtesi/" },
+      { "label": "Shoqëri", "url": "/tag/shoqeri/" },
+      { "label": "Opinion", "url": "/tag/opinion/" },
+      { "label": "Rastet", "url": "/tag/rastet/" },
+      { "label": "Autorët", "url": "/autoret/" }
+    ],
+    "secondary_navigation": [
+      { "label": "Rreth nesh", "url": "/rreth/" },
+      { "label": "Statuti", "url": "/statuti/" },
+      { "label": "Politika editoriale", "url": "/politika-editoriale/" },
+      { "label": "Korrigjimet", "url": "/korrigjimet/" },
+      { "label": "Transparenca", "url": "/transparenca/" },
+      { "label": "Bëhu autor", "url": "/behu-autor/" },
+      { "label": "Pyetje të shpeshta", "url": "/pyetje/" },
+      { "label": "Privatësia", "url": "/privatesia/" },
+      { "label": "Cookies", "url": "/cookies/" }
+    ]
+  },
+  "tags": [
+    { "slug": "politike", "name": "Politikë", "description": "Vendimet, ligjet dhe institucionet, me dokumentet përkrah.", "meta_description": "Artikuj të verifikuar për vendimet, ligjet dhe institucionet publike, me dokumentet zyrtare përkrah." },
+    { "slug": "ekonomi", "name": "Ekonomi", "description": "Buxhete, prokurime dhe para publike.", "meta_description": "Buxhete, prokurime dhe para publike, të lexuara rresht për rresht me burimet zyrtare." },
+    { "slug": "drejtesi", "name": "Drejtësi", "description": "Gjykatat, ligji dhe të drejtat.", "meta_description": "Gjykatat, ligjet dhe të drejtat e qytetarëve, të shpjeguara qartë dhe me burime." },
+    { "slug": "shoqeri", "name": "Shoqëri", "description": "Arsimi, shëndetësia dhe jeta e përditshme.", "meta_description": "Arsimi, shëndetësia dhe shërbimet publike: çfarë thonë shifrat dhe dokumentet." },
+    { "slug": "opinion", "name": "Opinion", "description": "Pikëpamje të autorëve, të shënuara qartë si të tilla.", "meta_description": "Opinione të argumentuara nga autorët e ODA-s, të shënuara qartë si pikëpamje personale." },
+    { "slug": "rastet", "name": "Rastet", "description": "Hulumtime të ndjekura deri në fund: çfarë gjetëm, çfarë bëmë dhe çfarë ndryshoi.", "meta_description": "Rastet e ODA-s: hulumtime të ndjekura deri te përgjigjja e institucioneve dhe rezultati." },
+    { "slug": "shkurt", "name": "Shkurt", "description": "Komente të shkurtra nga redaksia.", "meta_description": "Komente të shkurtra nga redaksia e ODA-s për ngjarjet e ditës, me burimin përkrah." }
+  ],
+  "pages": [
+    { "slug": "rreth", "title": "Rreth nesh", "excerpt": "Një dhomë ku flitet me prova.", "meta_description": "ODA është platformë e pavarur publikimi. Mësoni si punojmë, kush na financon dhe si të na kontaktoni." },
+    { "slug": "statuti", "title": "Statuti", "excerpt": "Misioni, parimet, organet dhe rregullat që na drejtojnë.", "meta_description": "Statuti i ODA-s: misioni, parimet, vijat e kuqe, organet drejtuese dhe rregullat e vendimmarrjes." },
+    { "slug": "politika-editoriale", "title": "Politika editoriale", "excerpt": "Si i zgjedhim, i verifikojmë dhe i korrigjojmë artikujt.", "meta_description": "Rregullat editoriale të ODA-s: burimet, verifikimi, burimet anonime, konflikti i interesit, korrigjimet dhe përdorimi i AI." },
+    { "slug": "privatesia", "title": "Politika e privatësisë", "excerpt": "Çfarë të dhënash mbledhim, pse, dhe çfarë të drejtash ke.", "meta_description": "Si i përpunon ODA të dhënat personale të abonentëve dhe anëtarëve, ku ruhen dhe si i ushtroni të drejtat tuaja." },
+    { "slug": "cookies", "title": "Politika e cookies", "excerpt": "Vetëm cookies të nevojshme. Pa reklama, pa gjurmim.", "meta_description": "ODA përdor vetëm cookies të nevojshme për hyrjen në llogari dhe sigurinë. Pa reklama dhe pa gjurmim." },
+    { "slug": "transparenca", "title": "Transparenca", "excerpt": "Nga vijnë paratë, si i shpenzojmë dhe sa herë gabojmë.", "meta_description": "Financimi, donatorët, shpenzimet dhe raportet mujore të ODA-s, të publikuara hapur." },
+    { "slug": "behu-autor", "title": "Bëhu autor", "excerpt": "Publiko në ODA me profilin dhe newsletter-in tënd.", "meta_description": "Si të aplikoni për t'u bërë autor në ODA: çfarë publikojmë, procesi i shqyrtimit dhe të drejtat e autorit." },
+    { "slug": "pyetje", "title": "Pyetje të shpeshta", "excerpt": "Përgjigje të shkurtra për pyetjet që na bëni më shpesh.", "meta_description": "Pyetje të shpeshta për ODA-n: financimi, verifikimi, korrigjimet, newsletter-i, privatësia dhe si të bëheni autor." },
+    { "slug": "korrigjimet", "title": "Korrigjimet", "excerpt": "Çdo gabim faktik i konfirmuar korrigjohet brenda 48 orëve dhe regjistrohet këtu.", "meta_description": "Regjistri publik i korrigjimeve të ODA-s dhe si të kërkoni korrigjimin e një artikulli." },
+    { "slug": "faleminderit", "title": "Faleminderit që u abonove", "excerpt": "Edhe një hap: konfirmo emailin.", "meta_description": "Konfirmoni abonimin në newsletter-in e ODA-s." }
+  ]
+}

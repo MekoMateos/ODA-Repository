@@ -1,0 +1,15 @@
+{{!< default}}
+{{!-- Case studies ("Rastet"): investigations followed through to a result.
+      Each post: custom excerpt = the result in one sentence; body sections Problemi / Çfarë bëmë / Rezultati / Burimet. --}}
+<section class="listing wrap cases-page">
+    {{#tag}}
+    <header class="listing-head">
+        <h1 class="listing-title">{{name}}</h1>
+        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
+    </header>
+    {{/tag}}
+    <div class="cases">
+        {{#foreach posts}}{{> "case-card"}}{{/foreach}}
+    </div>
+    {{pagination}}
+</section>

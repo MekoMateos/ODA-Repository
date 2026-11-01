@@ -1,0 +1,18 @@
+{{!-- Newsletter invitation. oda.js decides when it appears: after reading half a page or 40 seconds,
+      at most once every 14 days, never on the thank-you page. Phones get a bottom sheet, not a full-screen overlay. --}}
+<dialog class="nl-pop" id="nl-pop" aria-labelledby="nl-pop-h">
+    <button class="nl-close" type="button" data-nl-close aria-label="{{t "Close"}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <p class="nl-kicker">{{t "Free, every Friday"}}</p>
+    <h2 id="nl-pop-h">{{t "Read ODA by email"}}</h2>
+    <p class="nl-text">{{t "The week's verified stories, short takes from the editors, and the sources behind them. Three minutes to read."}}</p>
+    <form class="nl-form" data-members-form="signup">
+        <label class="sr-only" for="nl-email">{{t "Email address"}}</label>
+        <input id="nl-email" data-members-email type="email" autocomplete="email" required placeholder="{{t "your@email.com"}}">
+        <button class="btn" type="submit">{{t "Subscribe"}}</button>
+        <p class="form-note form-success">{{t "Check your inbox to confirm."}}</p>
+        <p class="form-note form-error">{{t "That address didn't work. Check it and try again."}}</p>
+    </form>
+    <button class="nl-later" type="button" data-nl-close>{{t "No thanks"}}</button>
+</dialog>

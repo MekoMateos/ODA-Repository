@@ -1,4 +1,5 @@
 {{!< default}}
+<h1 class="sr-only">{{@site.title}}: {{@site.description}}</h1>
 
 {{!-- Lead story: the featured post, or the newest one --}}
 <section class="hero">
@@ -14,7 +15,7 @@
 </section>
 
 <section class="grid grid-3 latest" aria-label="{{t "Latest"}}">
-    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}" limit="6" include="authors,tags" as |latest|}}
+    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}+tag:-rastet" limit="6" include="authors,tags" as |latest|}}
         {{#foreach latest}}{{> "card"}}{{/foreach}}
     {{/get}}
 </section>
@@ -38,6 +39,16 @@
         </article>
         {{/foreach}}
     </div>
+</section>
+{{/if}}
+{{/get}}
+
+{{!-- Case studies: investigations followed to a result --}}
+{{#get "posts" filter="tag:rastet" limit="3" include="authors,tags" as |cases|}}
+{{#if cases}}
+<section class="impact" aria-labelledby="impact-h">
+    <div class="topic-head"><h2 id="impact-h">{{t "Impact"}}</h2><p class="impact-dek">{{t "What happened after we published."}}</p><a class="more" href="{{@site.url}}/tag/rastet/">{{t "All cases"}}</a></div>
+    <div class="cases">{{#foreach cases}}{{> "case-card"}}{{/foreach}}</div>
 </section>
 {{/if}}
 {{/get}}

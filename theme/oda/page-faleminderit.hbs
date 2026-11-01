@@ -1,0 +1,17 @@
+{{!< default}}
+{{!-- Thank-you page after signing up. Not indexed by search engines. --}}
+{{#contentFor "head"}}<meta name="robots" content="noindex, follow">{{/contentFor}}
+{{#post}}
+<section class="thanks">
+    <div class="thanks-mark" aria-hidden="true">
+        <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="27" fill="none" stroke="currentColor" stroke-width="2"/><path d="M17 29l7 7 15-16" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    </div>
+    <h1>{{title}}</h1>
+    {{#if custom_excerpt}}<p class="thanks-dek">{{custom_excerpt}}</p>{{/if}}
+    <div class="gh-content thanks-body">{{content}}</div>
+    <div class="thanks-next">
+        <a class="btn" href="{{@site.url}}">{{t "Read the latest"}}</a>
+        <a class="pill pill-dark" href="{{@site.url}}/autoret/">{{t "Choose writers to follow"}}</a>
+    </div>
+</section>
+{{/post}}

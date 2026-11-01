@@ -1,7 +1,7 @@
 {
   "name": "oda",
   "description": "ODA: multi-author civic magazine theme. Section bar, condensed headlines, card grid, short takes, coloured category sections, evidence boxes, corrections register.",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "license": "UNLICENSED",
   "private": true,
   "author": {
@@ -50,6 +50,11 @@
         "type": "text",
         "default": "shkurt",
         "description": "Tag slug for short takes (the \"Shkurt\" band)"
+      },
+      "show_cookie_notice": {
+        "type": "boolean",
+        "default": true,
+        "description": "Small notice that only necessary cookies are used"
       }
     }
   }

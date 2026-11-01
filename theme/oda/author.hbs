@@ -1,4 +1,13 @@
 {{!< default}}
+{{#author}}
+<nav class="crumbs" aria-label="{{t "Breadcrumb"}}">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{@site.url}}"><span itemprop="name">{{t "Home"}}</span></a><meta itemprop="position" content="1"></li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="{{@site.url}}/autoret/"><span itemprop="name">{{t "Writers"}}</span></a><meta itemprop="position" content="2"></li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name">{{name}}</span><meta itemprop="item" content="{{url absolute="true"}}"><meta itemprop="position" content="3"></li>
+    </ol>
+</nav>
+{{/author}}
 <section class="listing wrap">
     {{#author}}
     <header class="profile">
