@@ -1,17 +1,23 @@
-{{!-- Article card. Pass size="lead" | "row" | (default) --}}
+{{!-- Article card. size: "hero" | "wide" | (default grid card) --}}
 <article class="card card-{{#if size}}{{size}}{{else}}std{{/if}} {{post_class}}">
-    {{#if feature_image}}{{#match size "!=" "row"}}
+    {{#if feature_image}}
     <a class="card-img" href="{{url}}" tabindex="-1" aria-hidden="true">
         <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
-             sizes="(min-width: 960px) {{#match size "lead"}}760px{{else}}360px{{/match}}, 92vw"
+             sizes="(min-width: 960px) {{#match size "hero"}}60vw{{else}}{{#match size "wide"}}50vw{{else}}32vw{{/match}}{{/match}}, 100vw"
              src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">
     </a>
-    {{/match}}{{/if}}
+    {{/if}}
     <div class="card-body">
+        {{#match size "hero"}}{{#primary_tag}}<a class="card-kicker" href="{{url}}">{{name}}</a>{{/primary_tag}}{{/match}}
+        <div class="card-top">
+            <h3 class="card-title"><a href="{{url}}">{{title}}</a></h3>
+            <a class="card-go" href="{{url}}" tabindex="-1" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h7M6 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+        </div>
         {{> "proof"}}
-        <h3 class="card-title"><a href="{{url}}">{{title}}</a></h3>
-        {{#match size "lead"}}<p class="card-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="34"}}{{/if}}</p>{{/match}}
-        {{#match size "!=" "row"}}{{#match size "!=" "lead"}}{{#if custom_excerpt}}<p class="card-excerpt">{{custom_excerpt}}</p>{{/if}}{{/match}}{{/match}}
-        <p class="byline">{{t "by"}} {{authors separator=", "}}, <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM YYYY"}}</time></p>
+        <p class="card-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="26"}}{{/if}}</p>
+        <p class="card-meta">
+            <span class="card-author">{{authors separator=", " autolink="false"}}</span>
+            <span class="card-stats"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM"}}</time>{{#if @site.comments_enabled}} <span class="sep" aria-hidden="true"></span> {{comment_count empty=(t "0 comments") singular=(t "comment") plural=(t "comments")}}{{/if}}</span>
+        </p>
     </div>
 </article>

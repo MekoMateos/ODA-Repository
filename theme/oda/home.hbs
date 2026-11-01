@@ -1,48 +1,66 @@
 {{!< default}}
 
-<section class="front wrap">
-    {{#get "posts" filter="featured:true" limit="1" include="authors,tags" as |lead|}}
+{{!-- Lead story: the featured post, or the newest one --}}
+<section class="hero">
+    {{#get "posts" filter="featured:true+tag:-{{@custom.takes_tag}}" limit="1" include="authors,tags" as |lead|}}
         {{#if lead}}
-            {{#foreach lead}}<div class="front-lead">{{> "card" size="lead"}}</div>{{/foreach}}
+            {{#foreach lead}}{{> "card" size="hero"}}{{/foreach}}
         {{else}}
-            {{#get "posts" limit="1" include="authors,tags" as |first|}}
-                {{#foreach first}}<div class="front-lead">{{> "card" size="lead"}}</div>{{/foreach}}
+            {{#get "posts" filter="tag:-{{@custom.takes_tag}}" limit="1" include="authors,tags" as |first|}}
+                {{#foreach first}}{{> "card" size="hero"}}{{/foreach}}
             {{/get}}
         {{/if}}
     {{/get}}
-
-    <aside class="front-latest" aria-labelledby="latest-h">
-        <h2 id="latest-h" class="rail-title">{{t "Latest"}}</h2>
-        <ol class="latest-list">
-        {{#get "posts" filter="featured:false" limit="6" include="authors,tags" as |latest|}}
-            {{#foreach latest}}<li>{{> "card" size="row"}}</li>{{/foreach}}
-        {{/get}}
-        </ol>
-    </aside>
 </section>
 
-{{#get "tags" filter="slug:[{{@custom.home_topics}}]" include="count.posts" limit="6" as |topics|}}
+<section class="grid grid-3 latest" aria-label="{{t "Latest"}}">
+    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}" limit="6" include="authors,tags" as |latest|}}
+        {{#foreach latest}}{{> "card"}}{{/foreach}}
+    {{/get}}
+</section>
+
+{{!-- Short takes from the editors --}}
+{{#get "posts" filter="tag:{{@custom.takes_tag}}" limit="3" include="authors" as |takes|}}
+{{#if takes}}
+<section class="takes" aria-labelledby="takes-h">
+    <div class="takes-head">
+        {{#foreach takes limit="1"}}<span class="date-tag"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time></span>{{/foreach}}
+        <h2 id="takes-h">{{t "Short takes from ODA"}}</h2>
+        <a class="more" href="{{@site.url}}/tag/{{@custom.takes_tag}}/">{{t "All takes"}}</a>
+    </div>
+    <div class="grid grid-3 takes-grid">
+        {{#foreach takes}}
+        <article class="take">
+            <h3><a href="{{url}}">{{title}}</a></h3>
+            <p class="take-by">{{#primary_author}}{{#if profile_image}}<img class="avatar avatar-s" src="{{img_url profile_image size="s"}}" alt="">{{/if}}<span>{{name}}</span>{{/primary_author}}</p>
+            <div class="take-text">{{excerpt words="70"}}</div>
+            <a class="take-more" href="{{url}}">{{t "Read the take"}}</a>
+        </article>
+        {{/foreach}}
+    </div>
+</section>
+{{/if}}
+{{/get}}
+
+{{!-- Category sections, each with its own colour --}}
+{{#get "tags" filter="slug:[{{@custom.home_topics}}]" limit="6" as |topics|}}
 {{#foreach topics}}
-<section class="rail wrap" aria-labelledby="rail-{{slug}}">
-    <div class="rail-head">
-        <h2 id="rail-{{slug}}" class="rail-title">{{name}}</h2>
-        <a class="rail-more" href="{{url}}">{{t "All in {name}" name=name}}</a>
-    </div>
-    <div class="rail-grid">
-        {{#get "posts" filter="tag:{{slug}}" limit="3" include="authors,tags" as |tposts|}}
-            {{#foreach tposts}}{{> "card"}}{{/foreach}}
-        {{/get}}
-    </div>
+<section class="topic topic-{{slug}}" aria-labelledby="topic-{{slug}}">
+    <div class="topic-head"><h2 id="topic-{{slug}}"><a href="{{url}}">{{name}}</a></h2></div>
+    {{#get "posts" filter="tag:{{slug}}+tag:-{{@custom.takes_tag}}" limit="4" include="authors,tags" as |tposts|}}
+        <div class="topic-lead">{{#foreach tposts limit="1"}}{{> "card" size="wide"}}{{/foreach}}</div>
+        <div class="grid grid-3 topic-grid">
+            {{#foreach tposts from="2" limit="2"}}{{> "card"}}{{/foreach}}
+            <a class="topic-more" href="{{../url}}"><span>{{t "Read more {name}" name=../name}}</span><svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h7M6 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+        </div>
+    {{/get}}
 </section>
 {{/foreach}}
 {{/get}}
 
 {{#if @custom.show_authors_on_home}}
-<section class="writers wrap" aria-labelledby="writers-h">
-    <div class="rail-head">
-        <h2 id="writers-h" class="rail-title">{{t "Writers"}}</h2>
-        <a class="rail-more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a>
-    </div>
+<section class="writers" aria-labelledby="writers-h">
+    <div class="topic-head"><h2 id="writers-h">{{t "Writers"}}</h2><a class="more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a></div>
     <ul class="writer-strip">
     {{#get "authors" limit="8" include="count.posts" order="count.posts desc" as |writers|}}
         {{#foreach writers}}<li>{{> "author-chip"}}</li>{{/foreach}}

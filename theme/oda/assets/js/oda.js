@@ -1,7 +1,6 @@
 // Scroll reveal for sections below the fold (styles in kuqezi.css; skipped if reduced motion is on).
 (function () {
-    if (!document.body.classList.contains('scheme-kuqezi')) return;
-    var targets = document.querySelectorAll('.rail, .writers, .join, .author-box, .evidence, .register');
+    var targets = document.querySelectorAll('.takes, .topic, .writers, .join, .read-next, .author-box, .evidence');
     if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
@@ -58,5 +57,19 @@
     box.querySelectorAll('a[href^="http"]').forEach(function (a) {
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
+    });
+})();
+
+// Share button: native share sheet on phones, copy link elsewhere.
+(function () {
+    var btn = document.querySelector('[data-share]');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        var data = { title: document.title, url: location.href };
+        if (navigator.share) { navigator.share(data).catch(function () {}); return; }
+        if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () {
+            var old = btn.textContent; btn.textContent = document.documentElement.lang.indexOf('sq') === 0 ? 'Lidhja u kopjua' : 'Link copied';
+            setTimeout(function () { btn.textContent = old; }, 1800);
+        });
     });
 })();

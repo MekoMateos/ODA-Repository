@@ -1,7 +1,7 @@
 {
   "name": "oda",
-  "description": "ODA: multi-author civic publishing theme with evidence boxes, author newsletters and a public corrections register.",
-  "version": "0.1.0",
+  "description": "ODA: multi-author civic magazine theme. Section bar, condensed headlines, card grid, short takes, coloured category sections, evidence boxes, corrections register.",
+  "version": "0.2.0",
   "license": "UNLICENSED",
   "private": true,
   "author": {
@@ -32,22 +32,13 @@
     },
     "card_assets": true,
     "custom": {
-      "color_scheme": {
-        "type": "select",
-        "options": [
-          "Kuq e zi",
-          "Guri"
-        ],
-        "default": "Kuq e zi",
-        "description": "Kuq e zi = red and black; Guri = stone and walnut"
-      },
       "tagline": {
         "type": "text",
         "default": "Dhoma ku flitet me prova."
       },
       "home_topics": {
         "type": "text",
-        "default": "politike,ekonomi,drejtesi",
+        "default": "politike,ekonomi,drejtesi,shoqeri",
         "description": "Comma-separated tag slugs shown as rails on the home page"
       },
       "show_authors_on_home": {
@@ -58,6 +49,11 @@
         "type": "text",
         "default": "/tag/english/",
         "description": "Link for the language switch"
+      },
+      "takes_tag": {
+        "type": "text",
+        "default": "shkurt",
+        "description": "Tag slug for short takes (the \"Shkurt\" band)"
       }
     }
   }

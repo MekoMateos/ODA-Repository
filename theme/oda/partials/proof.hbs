@@ -1,5 +1,2 @@
 {{!-- Evidence rating, set by the Verification Desk with internal tags. --}}
-{{#has tag="#verifikuar"}}<span class="proof proof-ok">{{t "Verified"}}</span>{{/has}}
-{{#has tag="#pjeserisht"}}<span class="proof proof-part">{{t "Partly verified"}}</span>{{/has}}
-{{#has tag="opinion"}}<span class="proof proof-op">{{t "Opinion"}}</span>{{/has}}
-{{#has tag="#korrigjuar"}}<span class="proof proof-fix">{{t "Corrected"}}</span>{{/has}}
+<span class="proofs">{{#has tag="#verifikuar"}}<span class="proof proof-ok">{{t "Verified"}}</span>{{/has}}{{#has tag="#pjeserisht"}}<span class="proof proof-part">{{t "Partly verified"}}</span>{{/has}}{{#has tag="opinion"}}<span class="proof proof-op">{{t "Opinion"}}</span>{{/has}}{{#has tag="#korrigjuar"}}<span class="proof proof-fix">{{t "Corrected"}}</span>{{/has}}</span>
