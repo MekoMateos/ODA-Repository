@@ -58,7 +58,7 @@
 {{#foreach topics}}
 <section class="topic topic-{{slug}}" aria-labelledby="topic-{{slug}}">
     <div class="topic-head"><h2 id="topic-{{slug}}"><a href="{{url}}">{{name}}</a></h2></div>
-    {{#get "posts" filter="tag:{{slug}}+tag:-{{@custom.takes_tag}}" limit="4" include="authors,tags" as |tposts|}}
+    {{#get "posts" filter="tag:{{slug}}+tag:-{{@custom.takes_tag}}+featured:false" limit="4" include="authors,tags" as |tposts|}}
         <div class="topic-lead">{{#foreach tposts limit="1"}}{{> "card" size="wide"}}{{/foreach}}</div>
         <div class="grid grid-3 topic-grid">
             {{#foreach tposts from="2" limit="2"}}{{> "card"}}{{/foreach}}
@@ -74,7 +74,7 @@
     <div class="topic-head"><h2 id="writers-h">{{t "Writers"}}</h2><a class="more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a></div>
     <ul class="writer-strip">
     {{#get "authors" limit="8" include="count.posts" order="count.posts desc" as |writers|}}
-        {{#foreach writers}}<li>{{> "author-chip"}}</li>{{/foreach}}
+        {{#foreach writers}}{{#if count.posts}}<li>{{> "author-chip"}}</li>{{/if}}{{/foreach}}
     {{/get}}
     </ul>
 </section>

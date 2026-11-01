@@ -8,7 +8,7 @@
 {{/post}}
     <ul class="writer-grid">
     {{#get "authors" limit="100" include="count.posts" order="name asc" as |writers|}}
-        {{#foreach writers}}<li>{{> "author-chip"}}</li>{{/foreach}}
+        {{#foreach writers}}{{#if count.posts}}<li>{{> "author-chip"}}</li>{{/if}}{{/foreach}}
     {{/get}}
     </ul>
 </section>

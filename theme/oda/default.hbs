@@ -20,10 +20,10 @@
         {{navigation}}
     </nav>
     <div class="head-row">
-        <a class="logo" href="{{@site.url}}" aria-label="{{@site.title}}">{{#if @site.logo}}<img src="{{@site.logo}}" alt="{{@site.title}}">{{else}}ODA{{/if}}</a>
+        <a class="logo" href="{{@site.url}}" aria-label="{{@site.title}}">{{#if @site.logo}}<img src="{{@site.logo}}" alt="{{@site.title}}">{{else}}<svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg><span>ODA</span>{{/if}}</a>
         {{#is "post"}}{{#post}}{{#primary_tag}}<a class="head-section" href="{{url}}">{{name}}</a>{{/primary_tag}}{{/post}}{{/is}}
         <div class="head-actions">
-            <a class="head-link hide-s" href="{{@custom.english_section_path}}" hreflang="en">English</a>
+            {{#if @custom.english_section_path}}<a class="head-link hide-s" href="{{@custom.english_section_path}}" hreflang="en">English</a>{{/if}}
             {{#if @site.members_enabled}}
                 <a class="head-link hide-s" href="#/portal/signup">{{t "Newsletter"}}</a>
                 {{#if @member}}

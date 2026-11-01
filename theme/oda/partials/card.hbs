@@ -17,7 +17,7 @@
         <p class="card-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="26"}}{{/if}}</p>
         <p class="card-meta">
             <span class="card-author">{{authors separator=", " autolink="false"}}</span>
-            <span class="card-stats"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM"}}</time>{{#if @site.comments_enabled}} <span class="sep" aria-hidden="true"></span> {{comment_count empty=(t "0 comments") singular=(t "comment") plural=(t "comments")}}{{/if}}</span>
+            <span class="card-stats"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM"}}</time>{{#if @site.comments_enabled}}{{comment_count empty="" singular=(t "comment") plural=(t "comments") class="card-comments"}}{{/if}}</span>
         </p>
     </div>
 </article>

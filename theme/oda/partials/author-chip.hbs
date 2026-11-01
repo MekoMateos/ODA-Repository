@@ -2,7 +2,7 @@
     {{#if profile_image}}
         <img class="avatar" src="{{img_url profile_image size="s"}}" alt="" loading="lazy">
     {{else}}
-        <span class="avatar avatar-blank" aria-hidden="true">{{name}}</span>
+        <span class="avatar avatar-blank" aria-hidden="true"><svg viewBox="0 0 24 24" width="60%" height="60%"><circle cx="12" cy="8.5" r="4.2" fill="currentColor"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="currentColor"/></svg></span>
     {{/if}}
     <span class="writer-name">{{name}}</span>
     {{#if count.posts}}<span class="writer-count">{{plural count.posts empty="" singular=(t "% article") plural=(t "% articles")}}</span>{{/if}}

@@ -12,6 +12,7 @@ Built on self-hosted Ghost 6, behind Cloudflare, on a Hetzner server in the EU.
 | `infra/` | Production server: Docker Compose (Ghost, MySQL, Caddy), hardening, Cloudflare-only firewall, encrypted backups, restore |
 | `.github/workflows/` | Theme check + deploy; infra deploy with automatic rollback. Both need approval in the `production` environment |
 | `content/` | Launch pages in Albanian (About, Charter, Editorial policy, Privacy, Cookies, Transparency, Become an author, FAQ, Corrections, Thank-you), tag descriptions, navigation and SEO settings, plus `import.mjs` to load them into Ghost |
+| `brand/` | ODA logo (SVG), site icon (512/180/32 px) and default social share image (1200×630). Upload the icon and share image in Ghost Admin > Settings > Design & Branding |
 | `docs/runbooks/` | Step-by-step: first server setup, publishing workflow, restore, incidents |
 
 ## How editors use the theme

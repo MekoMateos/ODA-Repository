@@ -20,7 +20,7 @@
     {{/if}}
 
     <div class="article-tools">
-        {{#if @site.comments_enabled}}<a class="box-btn" href="#discussion">{{comment_count empty=(t "0 comments") singular=(t "comment") plural=(t "comments")}}</a>{{/if}}
+        {{#if @site.comments_enabled}}<a class="box-btn" href="#discussion">{{comment_count empty=(t "Discussion") singular=(t "comment") plural=(t "comments")}}</a>{{/if}}
         <span class="box-btn">{{reading_time minute=(t "1 min read") minutes=(t "% min read")}}</span>
         <button class="box-btn share" type="button" data-share>{{t "Share"}}</button>
     </div>
