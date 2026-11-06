@@ -1,6 +1,7 @@
 // Server-rendered HTML. Every interpolated value is escaped by the `html` tag unless wrapped in raw().
 import { STATUSES, RATINGS, ROLES, CHECKLIST, availableActions, canTick, requiredItems } from './workflow.js';
-import { RESOURCE_CATEGORIES, RESOURCE_LANGS, REJECT_REASONS, isPollOpen } from './community.js';
+import { RESOURCE_CATEGORIES, RESOURCE_LANGS, REJECT_REASONS, isPollOpen, normalizeUrl } from './community.js';
+import { SUBMISSION_SECTIONS, SUBMISSION_REJECT_REASONS, SPAM_REASON, LIMITS } from './submissions.js';
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
@@ -33,7 +34,7 @@ export function layout({ user, title, active, body, flash, csrf, badges = {} }) 
   const nav = [
     ...(user.role !== 'contributor' ? [['queue', '/', 'Radha']] : []),
     ['mine', '/te-miat', 'Artikujt e mi'],
-    ...(user.role === 'editor' ? [['resources', '/burime', 'Burime'], ['polls', '/sondazhe', 'Sondazhe']] : []),
+    ...(user.role === 'editor' ? [['submissions', '/shkrime', 'Shkrime'], ['resources', '/burime', 'Burime'], ['polls', '/sondazhe', 'Sondazhe']] : []),
     ...(['editor', 'admin'].includes(user.role) ? [['audit', '/regjistri', 'Regjistri']] : []),
     ...(user.role === 'admin' ? [['team', '/ekipi', 'Ekipi']] : []),
   ];
@@ -84,7 +85,7 @@ ${articles.length ? html`
   <thead><tr><th scope="col">Artikulli</th><th scope="col">Statusi</th><th scope="col">Redaktor / verifikues</th><th scope="col">Afati</th><th scope="col">Përditësuar</th></tr></thead>
   <tbody>
   ${articles.map(a => html`<tr>
-    <td data-l=""><a class="title" href="/redaksia/artikull/${a.ghost_id}">${a.title}</a><span class="sub">${a.author_name}</span></td>
+    <td data-l=""><a class="title" href="/redaksia/artikull/${a.ghost_id}">${a.title}</a><span class="sub">${a.author_name}${a.guest ? ' · i ftuar' : ''}</span></td>
     <td data-l="Statusi">${statusBadge(a.status)} ${ratingBadge(a.rating)}</td>
     <td class="people" data-l="Redaktor / verifikues">${a.editor_name || a.editor_email || '—'}<span class="sub">${a.verifier_name || a.verifier_email || 'pa verifikues'}</span></td>
     <td data-l="Afati" class="${isOverdue(a) ? 'overdue' : ''}">${a.deadline ? fmtDate(a.deadline) : '—'}${isOverdue(a) ? html`<span class="sub">Me vonesë</span>` : ''}</td>
@@ -138,6 +139,7 @@ export function articlePage({ user, a, post, notes, history, verifiers, links })
   <div>
     <h1>${a.title}</h1>
     <p class="meta">nga ${a.author_name}, ${statusBadge(a.status)} ${ratingBadge(a.rating)}</p>
+    ${a.guest ? html`<p class="hint guest-note">Shkrim i ftuar: autori nuk ka llogari në Redaksi dhe nuk i sheh shënimet. Kërkesat për rishikim dhe vendimin ia dërgon redaktori me email te <strong>${a.author_email}</strong>. Pas rishikimit, redaktori e dorëzon sërish në emër të autorit.</p>` : ''}
   </div>
   <p class="links">
     ${links.preview ? html`<a class="btn btn-quiet" href="${links.preview}" target="_blank" rel="noopener">Parapamje</a>` : ''}
@@ -228,6 +230,7 @@ function describe(h) {
     resource_added: 'shtoi një burim për studentët', poll_create: 'shkroi një sondazh',
     poll_open: 'hapi një sondazh', poll_close: 'mbylli një sondazh', poll_delete: 'fshiu një draft sondazhi',
     resource_seed: 'shtoi listën fillestare të burimeve në pritje',
+    guest_accept: 'pranoi një shkrim të ftuar dhe e çoi në radhë', guest_reject: 'refuzoi një shkrim të ftuar',
   };
   if (map[h.action]) return map[h.action];
   if (h.action === 'check' || h.action === 'uncheck') {
@@ -264,7 +267,7 @@ export function teamPage({ users }) {
 
 function detailText(detail) {
   let d = {}; try { d = JSON.parse(detail || '{}'); } catch { return detail || ''; }
-  return d.question || d.url || d.email || '';
+  return d.question || d.url || d.email || d.title || '';
 }
 
 export function auditPage({ rows }) {
@@ -386,4 +389,91 @@ ${polls.length ? html`<ul class="res-list">${polls.map(p => {
   </div>
 </li>`;
 })}</ul>` : html`<p class="empty">Ende asnjë sondazh. Shkruaj të parin më sipër.</p>`}`;
+}
+
+// ---------- Guest pieces ("Shkruaj një herë" on the home page) ----------
+const SUB_LABEL = { pending: 'Në pritje', accepted: 'Pranuar', rejected: 'Refuzuar' };
+const subBadge = (s) => html`<span class="status ${s.status === 'accepted' ? 'st-approved' : s.status === 'rejected' ? 'st-rejected' : 'st-submitted'}">${SUB_LABEL[s.status]}</span>`;
+const sectionName = (k) => SUBMISSION_SECTIONS[k] || 'Pa rubrikë';
+const firstWords = (t, n) => { const w = String(t || '').split(/\s+/).filter(Boolean); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
+
+export function submissionsPage({ tab, items, counts, names }) {
+  const tabs = [['pending', 'Në pritje'], ['accepted', 'Të pranuara'], ['rejected', 'Të refuzuara']];
+  const who = (email) => names[email] || email;
+  return html`
+<div class="head"><h1>Shkrime të ftuara</h1></div>
+<p class="hint">Lexuesit pa llogari dërgojnë një shkrim nga faqja kryesore ("Shkruaj një herë"). Asgjë nuk publikohet nga këtu. Lexoje, pastaj prano ose refuzo. Shkrimi i pranuar bëhet draft në Ghost dhe hyn në radhë si çdo artikull tjetër: verifikim, shqyrtim ligjor kur duhet, miratim. Përgjigjju autorit me email brenda 10 ditëve pune, edhe kur përgjigjja është jo. Teksti dhe email-i i shkrimeve të vendosura fshihen pas ${String(LIMITS.retentionDays)} ditësh.</p>
+<nav class="tabs" aria-label="Filtro shkrimet">
+  ${tabs.map(([k, label]) => html`<a href="/redaksia/shkrime?tab=${k}" ${raw(tab === k ? 'aria-current="true"' : '')}>${label} <span class="n">${counts[k] || 0}</span></a>`)}
+</nav>
+${items.length ? html`<ul class="res-list">${items.map(s => html`<li class="block sub-item">
+  <div class="sub-head"><h2><a href="/redaksia/shkrime/${String(s.id)}">${s.title}</a></h2>${subBadge(s)}</div>
+  <p class="sub">${s.author_name} · ${String(s.words)} fjalë · ${sectionName(s.section)} · dërguar ${fmtDate(s.created_at, true)}${s.decided_at ? html` · ${s.status === 'accepted' ? 'pranuar' : 'refuzuar'} nga ${who(s.decided_by)}, ${fmtDate(s.decided_at, true)}` : ''}</p>
+  ${s.body ? html`<p class="res-desc">${firstWords(s.body, 55)}</p>` : html`<p class="sub">Teksti dhe email-i janë fshirë sipas afatit të ruajtjes.</p>`}
+  ${s.status === 'rejected' && s.reason ? html`<p class="sub">Arsyeja: ${s.reason}</p>` : ''}
+  ${s.ghost_id ? html`<p><a class="btn btn-quiet" href="/redaksia/artikull/${s.ghost_id}">Ndiq artikullin në radhë</a></p>` : ''}
+</li>`)}</ul>` : html`<p class="empty">${tab === 'pending' ? 'Asnjë shkrim në pritje. Shkrimet e reja nga lexuesit shfaqen këtu.' : 'Asgjë këtu ende.'}</p>`}`;
+}
+
+export function submissionPage({ s, names }) {
+  const who = (email) => names[email] || email;
+  const pending = s.status === 'pending';
+  const paras = String(s.body || '').split(/\n{2,}/).filter(p => p.trim());
+  const sources = String(s.sources || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const csrfField = html`<input type="hidden" name="_csrf" value="${raw('{{csrf}}')}">`;
+  return html`
+<p class="crumb"><a href="/redaksia/shkrime">Shkrime të ftuara</a></p>
+<div class="head head-article">
+  <div>
+    <h1>${s.title}</h1>
+    <p class="meta">nga ${s.author_name} · ${String(s.words)} fjalë · ${sectionName(s.section)} · dërguar ${fmtDate(s.created_at, true)} ${subBadge(s)}</p>
+  </div>
+</div>
+<div class="cols">
+<div class="col-main">
+  <section class="block">
+    <h2>Teksti</h2>
+    ${s.body ? html`<div class="manuscript">${paras.map(p => html`<p>${p}</p>`)}</div>` : html`<p class="empty">Teksti është fshirë sipas afatit të ruajtjes.</p>`}
+  </section>
+  ${sources.length ? html`<section class="block"><h2>Burimet e autorit</h2><ol class="src-list">${sources.map(x => {
+    const url = normalizeUrl(x);
+    return url ? html`<li><a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${x}</a></li>` : html`<li>${x}</li>`;
+  })}</ol></section>` : ''}
+</div>
+<div class="col-side">
+  <section class="block">
+    <h2>Autori</h2>
+    <dl class="facts"><dt>Emri</dt><dd>${s.author_name}</dd><dt>Email</dt><dd>${s.email || 'i fshirë'}</dd></dl>
+    ${s.note ? html`<p class="author-note"><strong>Shënimi i autorit:</strong> ${s.note}</p>` : ''}
+    <p class="hint">Email-i nuk shfaqet publikisht. Përdore vetëm për t'iu përgjigjur autorit për këtë shkrim.</p>
+  </section>
+  ${pending ? html`
+  <section class="block">
+    <h2>Prano</h2>
+    <form method="post" action="/redaksia/shkrime/${String(s.id)}/prano" class="poll-form">
+      ${csrfField}
+      <label>Titulli <input name="title" value="${s.title}" required minlength="8" maxlength="160"></label>
+      <label>Rubrika <select name="section"><option value="">Pa rubrikë</option>${Object.entries(SUBMISSION_SECTIONS).map(([k, v]) => html`<option value="${k}" ${raw(k === s.section ? 'selected' : '')}>${v}</option>`)}</select></label>
+      <button class="btn">Prano dhe krijo draftin në Ghost</button>
+      <p class="sub">Drafti hyn në radhë si "Dorëzuar" dhe ndjek shqyrtimin e plotë. Autori shfaqet si i ftuar.</p>
+    </form>
+  </section>
+  <section class="block">
+    <h2>Refuzo</h2>
+    <form method="post" action="/redaksia/shkrime/${String(s.id)}/refuzo" class="poll-form" data-confirm="Ta refuzojmë këtë shkrim?">
+      ${csrfField}
+      <label>Arsyeja <select name="reason">${SUBMISSION_REJECT_REASONS.map(x => html`<option>${x}</option>`)}<option value="other">Tjetër (shkruaje më poshtë)</option></select></label>
+      <label>Arsye tjetër <input name="reason_other" maxlength="300"></label>
+      <button class="btn btn-danger">Refuzo</button>
+      <p class="sub">"${SPAM_REASON}" e fshin tekstin dhe email-in menjëherë.</p>
+    </form>
+  </section>` : html`
+  <section class="block">
+    <h2>Vendimi</h2>
+    <dl class="facts"><dt>Statusi</dt><dd>${SUB_LABEL[s.status]}</dd><dt>Nga</dt><dd>${who(s.decided_by)}</dd><dt>Kur</dt><dd>${fmtDate(s.decided_at, true)}</dd>
+    ${s.reason ? html`<dt>Arsyeja</dt><dd>${s.reason}</dd>` : ''}</dl>
+    ${s.ghost_id ? html`<p><a class="btn btn-quiet" href="/redaksia/artikull/${s.ghost_id}">Ndiq artikullin në radhë</a></p>` : ''}
+  </section>`}
+</div>
+</div>`;
 }

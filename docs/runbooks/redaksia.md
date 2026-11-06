@@ -50,6 +50,10 @@ SESSION_SECRET=$(openssl rand -base64 48) DEV_USER_EMAIL=you@example.org npm run
 
 `DEV_USER_EMAIL` is refused when `NODE_ENV=production`, and production refuses to start without Cloudflare Access settings.
 
+## Guest pieces
+
+Editors get **Shkrime** in the menu: pieces sent without an account from the home page ("Shkruaj një herë"), oldest first, with a red counter. Accept turns a piece into a Ghost draft in the queue as **Dorëzuar**; reject needs a reason. A guest has no account, so the editor writes to them by email and resubmits after a revision. Routine: [shkrime-te-ftuara.md](shkrime-te-ftuara.md).
+
 ## Polls and student resources
 
 Editors also get **Burime** (reader suggestions waiting for approval, with a red counter) and **Sondazhe** (write, open and close reader polls) in the menu. The public site reads them from `/api/` on the public domain; Caddy forwards only that path to Redaksia. Rules and formats: [community.md](community.md).

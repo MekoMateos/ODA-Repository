@@ -47,7 +47,8 @@ export const CHECKLIST = [
 export const ACTIONS = {
   submit: {
     label: 'Dorëzo për shqyrtim', from: ['draft', 'revision'], to: 'submitted',
-    allowed: (u, a) => isAuthor(u, a),
+    // A guest writer has no account: after a revision an editor resubmits on their behalf.
+    allowed: (u, a) => isAuthor(u, a) || (!!a.guest && u.role === 'editor'),
   },
   triage: {
     label: 'Merre në shqyrtim', from: ['submitted'], to: 'in_review',

@@ -34,6 +34,13 @@ export function ghostClient({ url, key, publicUrl }) {
       return posts.filter(p => (p.authors || []).some(a => a.email && a.email.toLowerCase() === email.toLowerCase()));
     },
 
+    // A guest piece accepted by an editor. Ghost matches the author by email and falls back to the site owner.
+    async createDraft({ title, html, tags, authorEmail }) {
+      const post = { title, html, status: 'draft', tags };
+      if (authorEmail) post.authors = [{ email: authorEmail }];
+      return api.posts.add(post, { source: 'html' });
+    },
+
     async setWorkflowTags(id, status, rating) {
       const post = await api.posts.read({ id, include: 'tags' });
       return api.posts.edit({ id, updated_at: post.updated_at, tags: nextTags(post.tags || [], status, rating) });

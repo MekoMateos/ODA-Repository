@@ -8,7 +8,11 @@
         <h1 class="article-title">{{title}}</h1>
         {{#has tag="Kërkim,kerkim"}}{{else}}{{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}{{/has}}
         <div class="article-byline">
+            {{#has tag="#i-ftuar"}}
+            <span class="byline-authors" data-guest-byline><span class="guest-flag">{{t "Guest piece"}}</span></span>
+            {{else}}
             <span class="byline-authors">{{#foreach authors}}<a href="{{url}}">{{name}}</a>{{#unless @last}}, {{/unless}}{{/foreach}}</span>
+            {{/has}}
             <span class="byline-meta"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time></span>
         </div>
     </header>
@@ -54,6 +58,12 @@
         </aside>
         {{/has}}
         <p class="report">{{t "Spotted an error?"}} <a href="{{@site.url}}/korrigjimet/?artikulli={{encode url}}">{{t "Request a correction"}}</a></p>
+        {{#has tag="#i-ftuar"}}
+        <div class="guest-box">
+            <p>{{t "This is a guest piece. The views are the author's; ODA's editors checked the facts before publication."}}</p>
+            <a class="pill pill-dark" href="{{@site.url}}/#shkruaj">{{t "Write for ODA too"}}</a>
+        </div>
+        {{else}}
         {{#foreach authors}}
         <div class="author-box">
             {{#if profile_image}}<img class="avatar" src="{{img_url profile_image size="s"}}" alt="">{{/if}}
@@ -64,6 +74,7 @@
             </div>
         </div>
         {{/foreach}}
+        {{/has}}
     </footer>
 
     {{#if comments}}

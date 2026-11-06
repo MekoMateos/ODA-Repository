@@ -86,6 +86,7 @@ services:
       GHOST_JWKS_URL: http://ghost:2368/members/.well-known/jwks.json
       COMMUNITY_SECRET: ${REDAKSIA_COMMUNITY_SECRET:-}
       TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      GHOST_GUEST_AUTHOR_EMAIL: ${REDAKSIA_GUEST_AUTHOR_EMAIL:-}
     volumes:
       - redaksia_data:/data
     networks: [internal]

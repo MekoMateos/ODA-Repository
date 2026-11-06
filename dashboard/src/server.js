@@ -11,6 +11,7 @@ import { STATUSES } from './workflow.js';
 import { communityStore, makeCommunity, CommunityError } from './community.js';
 import { memberVerifier } from './members.js';
 import { publicApi } from './public-api.js';
+import { submissionStore, makeSubmissions, LIMITS } from './submissions.js';
 
 const env = process.env;
 const isProd = env.NODE_ENV === 'production';
@@ -25,6 +26,17 @@ const csrf = makeCsrf(env.SESSION_SECRET);
 const siteUrl = String(env.SITE_URL || '').replace(/\/$/, '');
 const store = communityStore(db);
 const community = makeCommunity({ db, store, secret: env.COMMUNITY_SECRET || env.SESSION_SECRET });
+const subs = submissionStore(db);
+const submissions = makeSubmissions({
+  db, store: subs, ghost, secret: env.COMMUNITY_SECRET || env.SESSION_SECRET, guestAuthorEmail: env.GHOST_GUEST_AUTHOR_EMAIL,
+});
+// Guest pieces: text and email of decided ones are erased after the retention period (see the privacy page).
+const purgeSubmissions = () => {
+  try { const n = submissions.purge(); if (n) console.log(`Erased the text and email of ${n} decided guest piece(s) older than ${LIMITS.retentionDays} days`); }
+  catch (e) { console.error('submission purge', e.message); }
+};
+purgeSubmissions();
+setInterval(purgeSubmissions, 12 * 3600e3).unref();
 
 // First run: the bootstrap admin can log in and add everyone else.
 if (env.BOOTSTRAP_ADMIN_EMAIL && !db.getUser(env.BOOTSTRAP_ADMIN_EMAIL)) {
@@ -52,7 +64,7 @@ app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 // Public reader API (resources and polls). Caddy forwards only /api/* from the public domain.
 app.use('/api', publicApi({
-  store, community,
+  store, community, submissions,
   verifyMember: memberVerifier({ siteUrl, jwksUrl: env.GHOST_JWKS_URL }),
   allowedOrigins: String(env.PUBLIC_API_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
   turnstileSecret: env.TURNSTILE_SECRET,
@@ -68,7 +80,7 @@ r.use(csrf.verify);
 function render(req, res, { title, active, body, status = 200 }) {
   const flash = req.query.ok ? { type: 'ok', msg: String(req.query.ok).slice(0, 200) } : req.query.err ? { type: 'error', msg: String(req.query.err).slice(0, 300) } : null;
   const token = csrf.tokenFor(req.user.email);
-  const badges = req.user.role === 'editor' ? { resources: store.countResources().pending || 0 } : {};
+  const badges = req.user.role === 'editor' ? { resources: store.countResources().pending || 0, submissions: subs.count().pending || 0 } : {};
   const out = String(V.layout({ user: req.user, title, active, body, flash, csrf: token, badges })).replaceAll('{{csrf}}', token);
   res.status(status).type('html').send(out);
 }
@@ -167,6 +179,31 @@ r.post('/burime/:id', editorsOnly, (req, res) => {
   const tab = ['pending', 'approved', 'rejected'].includes(req.body.tab) ? req.body.tab : 'pending';
   community$((q) => { community.decide(q.user, q.params.id, q.body); return q.body.decision === 'approve' ? 'Burimi u miratua dhe është në faqe.' : 'U ruajt.'; }, `/redaksia/burime?tab=${tab}`)(req, res);
 });
+
+// ----- Guest pieces sent from the home page ("Shkruaj një herë") -----
+const SUB_TABS = ['pending', 'accepted', 'rejected'];
+r.get('/shkrime', editorsOnly, (req, res) => {
+  const tab = SUB_TABS.includes(req.query.tab) ? req.query.tab : 'pending';
+  render(req, res, { title: 'Shkrime të ftuara', active: 'submissions', body: V.submissionsPage({ tab, items: subs.list(tab), counts: subs.count(), names: names() }) });
+});
+r.get('/shkrime/:id', editorsOnly, (req, res) => {
+  const s = subs.get(req.params.id);
+  if (!s) return render(req, res, { title: 'Nuk u gjet', active: 'submissions', body: V.html`<h1>Shkrimi nuk u gjet</h1><p><a href="/redaksia/shkrime">Kthehu te shkrimet</a></p>`, status: 404 });
+  render(req, res, { title: s.title, active: 'submissions', body: V.submissionPage({ s, names: names() }) });
+});
+r.post('/shkrime/:id/prano', editorsOnly, wrap(async (req, res) => {
+  try {
+    const ghostId = await submissions.accept(req.user, req.params.id, req.body);
+    back(res, `/redaksia/artikull/${ghostId}`, 'ok', 'Shkrimi u pranua. Tani është draft në Ghost dhe në radhë si "Dorëzuar". Njofto autorin me email.');
+  } catch (e) {
+    if (!(e instanceof CommunityError)) throw e;
+    back(res, `/redaksia/shkrime/${encodeURIComponent(req.params.id)}`, 'err', e.message);
+  }
+}));
+r.post('/shkrime/:id/refuzo', editorsOnly, community$((req) => {
+  submissions.reject(req.user, req.params.id, req.body);
+  return 'Shkrimi u refuzua. Shkruaji autorit arsyen me email.';
+}, '/redaksia/shkrime'));
 
 r.get('/sondazhe', editorsOnly, (req, res) => {
   store.closeExpired();

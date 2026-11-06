@@ -3,10 +3,15 @@
 import express from 'express';
 import { CommunityError, RESOURCE_CATEGORIES, RESOURCE_LANGS, SEED_NAME } from './community.js';
 
-export function publicApi({ store, community, verifyMember, allowedOrigins = [], turnstileSecret }) {
+export function publicApi({ store, community, submissions, verifyMember, allowedOrigins = [], turnstileSecret }) {
   const r = express.Router();
-  r.use(express.json({ limit: '16kb' }));
-  r.use(express.urlencoded({ extended: false, limit: '16kb' }));
+  // Small bodies everywhere; a written piece (up to 8,000 words) gets more room on its own route.
+  const parsers = (limit) => [express.json({ limit }), express.urlencoded({ extended: false, limit })];
+  const small = parsers('16kb'), large = parsers('256kb');
+  r.use((req, res, next) => {
+    const [json, form] = req.method === 'POST' && req.path === '/shkrime' ? large : small;
+    json(req, res, (e) => (e ? next(e) : form(req, res, next)));
+  });
 
   // Same-origin in production (Caddy). Extra origins only for local development and the design preview.
   r.use((req, res, next) => {
@@ -33,6 +38,16 @@ export function publicApi({ store, community, verifyMember, allowedOrigins = [],
   };
   const bearer = (req) => (req.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim() || null;
   const clientIp = (req) => req.get('Cf-Connecting-Ip') || req.ip;
+  // Optional Cloudflare Turnstile check, used by both public forms.
+  const humanCheck = async (req) => {
+    if (!turnstileSecret) return;
+    const token = (req.body || {})['cf-turnstile-response'];
+    const ok = token && await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST', body: new URLSearchParams({ secret: turnstileSecret, response: String(token), remoteip: clientIp(req) || '' }),
+      signal: AbortSignal.timeout(5000),
+    }).then(x => x.json()).then(j => j.success === true).catch(() => false);
+    if (!ok) throw new CommunityError('Verifikimi kundër spam-it dështoi. Rifresko faqen dhe provo sërish.');
+  };
 
   // ----- Student resources -----
   const resourcesJson = (req, res) => {
@@ -46,18 +61,23 @@ export function publicApi({ store, community, verifyMember, allowedOrigins = [],
 
   r.post('/burime', limiter(20, 60 * 60e3), async (req, res) => {
     try {
-      if (turnstileSecret) {
-        const token = req.body['cf-turnstile-response'];
-        const ok = token && await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-          method: 'POST', body: new URLSearchParams({ secret: turnstileSecret, response: String(token), remoteip: clientIp(req) || '' }),
-          signal: AbortSignal.timeout(5000),
-        }).then(x => x.json()).then(j => j.success === true).catch(() => false);
-        if (!ok) throw new CommunityError('Verifikimi kundër spam-it dështoi. Rifresko faqen dhe provo sërish.');
-      }
-      community.suggest(req.body, clientIp(req));
+      await humanCheck(req);
+      community.suggest(req.body || {}, clientIp(req));
       res.status(202).set('Cache-Control', 'no-store').json({ ok: true, message: 'Faleminderit! Redaksia e shqyrton sugjerimin para se të shfaqet në faqe.' });
     } catch (e) { fail(res, e); }
   });
+
+  // ----- One-time pieces from readers without an account -----
+  // The text goes only to the editors' queue; nothing here is ever public.
+  if (submissions) {
+    r.post('/shkrime', limiter(10, 60 * 60e3), async (req, res) => {
+      try {
+        await humanCheck(req);
+        submissions.submit(req.body || {}, clientIp(req));
+        res.status(202).set('Cache-Control', 'no-store').json({ ok: true, message: 'Shkrimi yt mbërriti në odë. Një redaktor e lexon brenda 10 ditëve pune dhe të shkruan në email.' });
+      } catch (e) { fail(res, e); }
+    });
+  }
 
   // ----- Polls -----
   r.get(['/sondazhe', '/sondazhe.json'], (req, res) => {
@@ -84,11 +104,20 @@ export function publicApi({ store, community, verifyMember, allowedOrigins = [],
   r.post('/sondazhe/:slug/vote', limiter(40, 60 * 60e3), async (req, res) => {
     try {
       const email = await verifyMember(bearer(req));
-      const out = community.vote(req.params.slug, email, req.body.option);
+      const out = community.vote(req.params.slug, email, (req.body || {}).option);
       res.set('Cache-Control', 'no-store').json({ ok: true, ...out });
     } catch (e) { fail(res, e); }
   });
 
   r.use((req, res) => res.status(404).json({ error: 'Nuk u gjet.' }));
+  // Body errors answer in JSON like everything else here, never with the dashboard's HTML page.
+  // eslint-disable-next-line no-unused-vars
+  r.use((err, req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Teksti është shumë i gjatë për t’u dërguar.' });
+    if (err.type === 'entity.parse.failed' || err.status === 400) return res.status(400).json({ error: 'Kërkesë e pavlefshme.' });
+    console.error(err);
+    return res.status(500).json({ error: 'Diçka nuk shkoi. Provo sërish.' });
+  });
   return r;
 }

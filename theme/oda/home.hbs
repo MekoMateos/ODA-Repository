@@ -1,6 +1,9 @@
 {{!< default}}
 <h1 class="sr-only">{{@site.title}}: {{@site.description}}</h1>
 
+{{!-- Invitation to write: one piece without an account, or sign in as an author --}}
+{{> "write"}}
+
 {{!-- Lead story: the featured post, or the newest one --}}
 <section class="hero">
     {{#get "posts" filter="featured:true+tag:-{{@custom.takes_tag}}" limit="1" include="authors,tags" as |lead|}}

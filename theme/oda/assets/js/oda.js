@@ -77,7 +77,8 @@
 // ---------- Small storage helper (storage can be blocked; the page must still work) ----------
 var odaStore = {
     get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
-    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} },
+    del: function (k) { try { window.localStorage.removeItem(k); } catch (e) {} }
 };
 var DAY = 86400000;
 
@@ -604,4 +605,168 @@ function odaDate(iso, withTime) {
             if (window.turnstile) try { window.turnstile.reset(); } catch (x) {}
         }).then(function () { btn.disabled = false; });
     });
+})();
+
+// =====================================================================
+// v0.6: "Shkruaj artikullin tënd" at the top of the home page, and guest pieces
+// =====================================================================
+(function () {
+    var root = document.querySelector('[data-write]');
+    if (!root) return;
+    var toggle = root.querySelector('[data-write-toggle]'), panel = root.querySelector('[data-write-panel]');
+    var doors = root.querySelector('[data-write-doors]'), form = root.querySelector('[data-write-form]'), done = root.querySelector('[data-write-done]');
+    var openBtn = root.querySelector('[data-write-open]');
+    var countEl = form.querySelector('[data-write-count]'), savedEl = form.querySelector('[data-write-saved]');
+    var restoredEl = form.querySelector('[data-write-restored]'), msg = form.querySelector('[data-write-msg]');
+    var send = form.querySelector('button[type="submit"]');
+    var title = form.elements.title, body = form.elements.body;
+    var KEY = 'oda-shkrim', MIN = 200, MAX = 8000, FIELDS = ['title', 'section', 'body', 'sources', 'author_name', 'note'];
+    var T = odaSq ? {
+        words: function (n) { return n === 1 ? '1 fjalë' : n + ' fjalë'; },
+        need: function (n) { return n === 0 ? 'duhen të paktën ' + MIN : 'edhe ' + (MIN - n) + ' deri te minimumi'; },
+        over: 'shumë i gjatë: deri në 8.000 fjalë',
+        saved: function (t) { return 'U ruajt në këtë pajisje, ' + t; },
+        sending: 'Duke dërguar…',
+        bad: 'Plotëso titullin, shkrimin (të paktën 200 fjalë), emrin dhe email-in, dhe konfirmo deklaratën.',
+        offline: 'Shkrimi nuk u dërgua. Teksti yt mbetet i ruajtur në këtë pajisje. Provo sërish pas pak.'
+    } : {
+        words: function (n) { return n === 1 ? '1 word' : n + ' words'; },
+        need: function (n) { return n === 0 ? 'at least ' + MIN + ' needed' : (MIN - n) + ' more to the minimum'; },
+        over: 'too long: up to 8,000 words',
+        saved: function (t) { return 'Saved on this device, ' + t; },
+        sending: 'Sending…',
+        bad: 'Fill in the title, the piece (at least 200 words), your name and email, and tick the declaration.',
+        offline: 'The piece was not sent. Your text is still saved on this device. Try again in a moment.'
+    };
+
+    function wordCount(s) { return (String(s || '').match(/\S+/g) || []).length; }
+    function grow(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+    function growAll() { form.querySelectorAll('[data-grow]').forEach(grow); }
+    function setOpen(open) {
+        toggle.setAttribute('aria-expanded', String(open));
+        root.classList.toggle('is-open', open);
+        panel.inert = !open; // closed content cannot be reached with the keyboard
+    }
+    function view(name) { doors.hidden = name !== 'doors'; form.hidden = name !== 'form'; done.hidden = name !== 'done'; }
+    function openSheet() {
+        setOpen(true); view('form'); restore(); loadTurnstile(); count();
+        requestAnimationFrame(growAll);
+        title.focus({ preventScroll: true });
+        var top = form.getBoundingClientRect().top;
+        if (top < 0 || top > window.innerHeight * 0.45) form.scrollIntoView({ block: 'start' });
+    }
+
+    panel.inert = true;
+    toggle.addEventListener('click', function () { setOpen(toggle.getAttribute('aria-expanded') !== 'true'); });
+    openBtn.addEventListener('click', openSheet);
+    form.querySelector('[data-write-back]').addEventListener('click', function () { save(); view('doors'); openBtn.focus(); });
+
+    // Links from anywhere: /#shkruaj opens the two paths, /#shkruaj-nje-here goes straight to the sheet.
+    function fromHash() {
+        if (location.hash === '#shkruaj') { setOpen(true); if (done.hidden) view('doors'); }
+        else if (location.hash === '#shkruaj-nje-here') openSheet();
+    }
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+
+    function count() {
+        var n = wordCount(body.value);
+        countEl.className = 'sheet-count' + (n > MAX ? ' over' : n >= MIN ? ' ok' : '');
+        countEl.textContent = T.words(n) + (n < MIN ? ' · ' + T.need(n) : n > MAX ? ' · ' + T.over : '');
+    }
+
+    // The draft is kept only in this browser until it is sent, so a closed tab or a lost connection loses nothing.
+    var restoredOnce = false, saveTimer;
+    function save() {
+        var d = { t: Date.now() }, any = false;
+        FIELDS.forEach(function (f) { d[f] = form.elements[f].value; if (f !== 'section' && d[f].trim()) any = true; });
+        if (!any) { odaStore.del(KEY); return; }
+        odaStore.set(KEY, JSON.stringify(d));
+        var now = new Date();
+        savedEl.textContent = T.saved(String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+    }
+    function restore() {
+        if (restoredOnce) return;
+        restoredOnce = true;
+        var d = null;
+        try { d = JSON.parse(odaStore.get(KEY) || 'null'); } catch (e) {}
+        if (!d || !d.t || Date.now() - d.t > 30 * DAY) return;
+        var used = false;
+        FIELDS.forEach(function (f) { if (typeof d[f] === 'string' && d[f] && !form.elements[f].value) { form.elements[f].value = d[f]; used = true; } });
+        if (used) restoredEl.hidden = false;
+    }
+    form.querySelector('[data-write-clear]').addEventListener('click', function () {
+        FIELDS.forEach(function (f) { form.elements[f].value = ''; });
+        odaStore.del(KEY); restoredEl.hidden = true; count(); growAll(); title.focus();
+    });
+    form.addEventListener('input', function (e) {
+        var t = e.target;
+        if (t === title && /\n/.test(title.value)) title.value = title.value.replace(/\s*\n+\s*/g, ' ');
+        if (t.hasAttribute('data-grow')) grow(t);
+        if (t === body) count();
+        if (t.hasAttribute('aria-invalid')) {
+            t.removeAttribute('aria-invalid');
+            if (!form.querySelector('[aria-invalid]')) msg.textContent = ''; // everything flagged is fixed now
+        }
+        clearTimeout(saveTimer); saveTimer = setTimeout(save, 700);
+    });
+    title.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); body.focus(); } });
+    window.addEventListener('resize', function () { if (!form.hidden) growAll(); });
+
+    // Cloudflare Turnstile loads only when someone opens the sheet, never for every visitor of the home page.
+    var ts = form.querySelector('.write-turnstile'), tsId = null, tsLoading = false;
+    function loadTurnstile() {
+        if (!ts || tsLoading) return;
+        tsLoading = true;
+        window.odaTurnstileReady = function () { try { tsId = window.turnstile.render(ts, { sitekey: ts.getAttribute('data-sitekey'), theme: 'dark' }); } catch (e) {} };
+        var s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=odaTurnstileReady';
+        s.async = true;
+        document.head.appendChild(s);
+    }
+    function resetTurnstile() { if (window.turnstile && tsId !== null) { try { window.turnstile.reset(tsId); } catch (e) {} } }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var data = {};
+        new FormData(form).forEach(function (v, k) { data[k] = typeof v === 'string' ? v.trim() : v; });
+        data.consent = form.elements.consent.checked;
+        var n = wordCount(data.body), bad = [];
+        if ((data.title || '').length < 8) bad.push('title');
+        if (n < MIN || n > MAX) bad.push('body');
+        if ((data.author_name || '').length < 2) bad.push('author_name');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email || '')) bad.push('email');
+        if (!data.consent) bad.push('consent');
+        form.querySelectorAll('[aria-invalid]').forEach(function (f) { f.removeAttribute('aria-invalid'); });
+        if (bad.length) {
+            bad.forEach(function (k) { form.elements[k].setAttribute('aria-invalid', 'true'); });
+            form.elements[bad[0]].focus();
+            msg.className = 'sheet-msg err'; msg.textContent = T.bad;
+            return;
+        }
+        save();
+        send.disabled = true; msg.className = 'sheet-msg'; msg.textContent = T.sending;
+        odaApi.post('/shkrime', data).then(function () {
+            odaStore.del(KEY); form.reset(); restoredEl.hidden = true; msg.textContent = '';
+            view('done'); done.focus();
+        }).catch(function (err) {
+            msg.className = 'sheet-msg err';
+            msg.textContent = err && err.status ? err.message : T.offline;
+            resetTurnstile();
+        }).then(function () { send.disabled = false; });
+    });
+})();
+
+// ---------- Guest pieces: the guest's name moves from the text into the byline ----------
+(function () {
+    var by = document.querySelector('[data-guest-byline]');
+    var card = document.querySelector('.article-body > .guest-byline');
+    if (!by || !card) return;
+    var name = (card.querySelector('strong') || card).textContent.trim();
+    if (!name) return;
+    by.textContent = '';
+    by.appendChild(odaEl('strong', 'guest-name', name));
+    by.appendChild(document.createTextNode(' '));
+    by.appendChild(odaEl('span', 'guest-flag', odaSq ? 'Shkrim i ftuar' : 'Guest piece'));
+    card.remove();
 })();

@@ -144,7 +144,9 @@ function wrap(db) {
       if (r.kind.startsWith('checklist:')) checklist[r.kind.slice(10)] = r;
       else signoffs[r.kind] = r;
     }
-    return { ...a, legal_required: !!a.legal_required, signoffs, checklist };
+    // Guest piece: the author has no Redaksia account, so an editor acts for them (resubmits after a revision).
+    const guest = !q('SELECT 1 FROM users WHERE email = ?').get(a.author_email);
+    return { ...a, legal_required: !!a.legal_required, signoffs, checklist, guest };
   }
 
   return api;
