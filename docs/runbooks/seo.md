@@ -11,7 +11,7 @@ What the site already does, and the steps to take once it's live.
 | Breadcrumbs (BreadcrumbList microdata) | Theme: `partials/breadcrumbs.hbs`, `author.hbs` |
 | FAQ structured data (FAQPage) | Theme: `page-pyetje.hbs` + `oda.js` builds it from the H3 questions |
 | `sitemap.xml` | Ghost, automatic |
-| `robots.txt` | Theme: `theme/oda/robots.txt`. **Replace `oda.example.org` with the real domain before going live.** |
+| `robots.txt` | Theme: `theme/oda/robots.txt`. |
 | `noindex` on the thank-you page and 404 page | Theme |
 | One `<h1>` per page, `lang="sq"`, image `alt` text, responsive images, preloaded fonts | Theme |
 | Fast pages | Cloudflare caching, self-hosted fonts, no third-party trackers |
