@@ -1,24 +1,36 @@
-{{!-- Article card. size: "hero" | "wide" | (default grid card) --}}
-<article class="card card-{{#if size}}{{size}}{{else}}std{{/if}} {{post_class}}">
-    {{#if feature_image}}
-    <a class="card-img" href="{{url}}" tabindex="-1" aria-hidden="true">
-        <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
-             sizes="(min-width: 960px) {{#match size "hero"}}60vw{{else}}{{#match size "wide"}}50vw{{else}}32vw{{/match}}{{/match}}, 100vw"
-             src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">
-    </a>
-    {{/if}}
-    <div class="card-body">
-        {{#has tag="#live"}}<span class="live-flag card-live"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></span>{{/has}}
-        {{#match size "hero"}}{{#primary_tag}}<a class="card-kicker" href="{{url}}">{{name}}</a>{{/primary_tag}}{{/match}}
-        <div class="card-top">
-            <h3 class="card-title"><a href="{{url}}">{{title}}</a></h3>
-            <a class="card-go" href="{{url}}" tabindex="-1" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h7M6 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
-        </div>
-        {{> "proof"}}
-        <p class="card-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="26"}}{{/if}}</p>
-        <p class="card-meta">
-            <span class="card-author">{{#has tag="#i-ftuar"}}{{t "Guest piece"}}{{else}}{{authors separator=", " autolink="false"}}{{/has}}</span>
-            <span class="card-stats"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM"}}</time>{{#if @site.comments_enabled}}{{comment_count empty="" singular=(t "comment") plural=(t "comments") class="card-comments"}}{{/if}}</span>
+{{!-- A post in the feed. kind="take" shows the whole text of a short take instead of a teaser.
+     The block is "feed-post", not "post": Ghost's own post_class already puts "post" on every article. --}}
+<article class="feed-post{{#if kind}} is-{{kind}}{{/if}} {{post_class}}" data-topic="{{primary_tag.slug}}">
+    {{#has tag="#i-ftuar"}}
+    <span class="post-ava" aria-hidden="true"><span class="avatar avatar-blank"><svg viewBox="0 0 24 24" width="60%" height="60%"><path d="M8 2.5h8l2.6 7.2L12 22 5.4 9.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 22v-8.6" stroke="currentColor" stroke-width="1.7"/></svg></span></span>
+    {{else}}
+    {{#primary_author}}
+    <a class="post-ava" href="{{url}}" tabindex="-1" aria-hidden="true">{{#if profile_image}}<img class="avatar" src="{{img_url profile_image size="s"}}" alt="" width="44" height="44" loading="lazy">{{else}}<span class="avatar avatar-blank"><svg viewBox="0 0 24 24" width="60%" height="60%"><circle cx="12" cy="8.5" r="4.2" fill="currentColor"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="currentColor"/></svg></span>{{/if}}</a>
+    {{/primary_author}}
+    {{/has}}
+    <div class="post-main">
+        <p class="post-head">
+            <span class="post-author">{{#has tag="#i-ftuar"}}{{t "Guest piece"}}{{else}}{{authors separator=", "}}{{/has}}</span>
+            {{> "proof"}}
+            <span class="post-meta">{{#primary_tag}}<a class="chip" href="{{url}}">{{name}}</a>{{/primary_tag}}<time class="post-time" datetime="{{date format="YYYY-MM-DDTHH:mm:ssZ"}}" data-ago>{{date format="D MMM"}}</time></span>
+        </p>
+        {{#has tag="#live"}}<p class="live-flag card-live"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></p>{{/has}}
+        <h3 class="post-title"><a href="{{url}}">{{title}}</a></h3>
+        {{#match kind "take"}}
+        <div class="post-text">{{content}}</div>
+        {{else}}
+        <p class="post-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="34"}}{{/if}}</p>
+        {{/match}}
+        {{#if feature_image}}
+        <a class="post-media" href="{{url}}" tabindex="-1" aria-hidden="true" data-cursor="read">
+            <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
+                 sizes="(min-width: 700px) 580px, 100vw" src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">
+        </a>
+        {{/if}}
+        <p class="post-actions">
+            {{#if @site.comments_enabled}}<a class="act" href="{{url}}#discussion"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" stroke-linejoin="round"/></svg><span class="sr-only">{{t "Discussion"}}</span>{{comment_count empty="" singular="" plural=""}}</a>{{/if}}
+            <button class="act" type="button" data-share data-url="{{url absolute="true"}}" data-title="{{title}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 14v6h14v-6" stroke-linejoin="round" stroke-linecap="round"/></svg><span>{{t "Share"}}</span></button>
+            <span class="act act-read"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>{{reading_time minute=(t "1 min") minutes=(t "% min")}}</span>
         </p>
     </div>
 </article>

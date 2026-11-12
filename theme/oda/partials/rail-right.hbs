@@ -1,0 +1,34 @@
+{{!-- Right rail (wide screens; on narrow screens these blocks sit in the feed): live now, the open poll, the newsletter. --}}
+<aside class="rail rail-right">
+    <div class="rail-in">
+        {{#get "posts" filter="tag:hash-live" limit="1" fields="title,url,updated_at" as |live|}}{{#foreach live}}
+        <a class="rail-card rail-live" href="{{url}}">
+            <span class="live-flag"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm:ssZ"}}" data-ago>{{date updated_at format="HH:mm"}}</time></span>
+            <span class="rail-live-title">{{title}}</span>
+            <span class="rail-go">{{t "Follow the updates"}}</span>
+        </a>
+        {{/foreach}}{{/get}}
+
+        {{!-- Reader poll: filled in by oda.js from Redaksia; stays hidden when no poll is open --}}
+        <section class="rail-card poll-band" data-poll-home hidden aria-labelledby="poll-band-h">
+            <div class="rail-head"><h2 class="rail-label" id="poll-band-h">{{t "Reader poll"}}</h2><a class="more" href="{{@site.url}}/sondazhe/">{{t "All polls"}}</a></div>
+            <div class="poll-slot" data-poll-slot></div>
+        </section>
+
+        {{#if @site.members_enabled}}{{#unless @member}}
+        <section class="rail-card rail-join" aria-labelledby="rail-join-h">
+            <p class="rail-label">{{t "Free, every Friday"}}</p>
+            <h2 id="rail-join-h">{{t "Read ODA by email"}}</h2>
+            <form class="join-form" data-members-form="signup">
+                <label class="sr-only" for="rail-email">{{t "Email address"}}</label>
+                <input id="rail-email" data-members-email type="email" autocomplete="email" required placeholder="{{t "your@email.com"}}">
+                <button class="btn" type="submit">{{t "Subscribe"}}</button>
+                <p class="form-note form-success">{{t "Check your inbox to confirm."}}</p>
+                <p class="form-note form-error">{{t "That address didn't work. Check it and try again."}}</p>
+            </form>
+        </section>
+        {{/unless}}{{/if}}
+
+        <nav class="rail-foot" aria-label="{{t "About ODA"}}">{{navigation type="secondary"}}</nav>
+    </div>
+</aside>

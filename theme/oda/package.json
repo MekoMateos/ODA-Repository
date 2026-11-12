@@ -1,7 +1,7 @@
 {
   "name": "oda",
-  "description": "ODA: multi-author civic magazine theme. Section bar, condensed headlines, card grid, short takes, coloured category sections, evidence boxes, corrections register.",
-  "version": "0.6.0",
+  "description": "ODA: multi-author civic feed theme. One-column feed with side rails, condensed Archivo type, one fixed colour per topic, scroll motion, evidence boxes, corrections register.",
+  "version": "0.7.0",
   "license": "UNLICENSED",
   "private": true,
   "author": {

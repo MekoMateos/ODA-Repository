@@ -1,0 +1,15 @@
+{{!-- A compact post for rails: topic bands on the home page and "read next" under an article. --}}
+<article class="tile {{post_class}}" data-topic="{{primary_tag.slug}}">
+    <a class="tile-link" href="{{url}}" data-cursor="read">
+        {{#if feature_image}}
+        <span class="tile-img"><img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w" sizes="(min-width: 700px) 320px, 72vw"
+             src="{{img_url feature_image size="s"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy" draggable="false"></span>
+        {{/if}}
+        <span class="tile-body">
+            {{#has tag="#live"}}<span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span>{{/has}}
+            <span class="tile-title">{{title}}</span>
+            {{#unless feature_image}}<span class="tile-excerpt">{{#if custom_excerpt}}{{custom_excerpt}}{{else}}{{excerpt words="24"}}{{/if}}</span>{{/unless}}
+            <span class="tile-meta mono">{{#has tag="#i-ftuar"}}{{t "Guest piece"}}{{else}}{{authors separator=", " autolink="false"}}{{/has}} <time datetime="{{date format="YYYY-MM-DDTHH:mm:ssZ"}}" data-ago>{{date format="D MMM"}}</time></span>
+        </span>
+    </a>
+</article>

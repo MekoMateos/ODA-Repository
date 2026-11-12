@@ -1,7 +1,13 @@
 {{!-- Information notice, not a consent banner: ODA uses only strictly necessary cookies
       (member sign-in) and cookieless analytics, which need no consent under GDPR/ePrivacy.
+      So there is one button and nothing to switch on or off. Shown in the middle of the screen on the first visit.
       If a tracking or advertising tool is ever added, replace this with a real opt-in banner. --}}
-<div class="cookie-note" id="cookie-note" role="region" aria-label="{{t "Cookies"}}" hidden>
-    <p>{{t "We use only the cookies needed for signing in. No ads, no tracking."}} <a href="{{@site.url}}/cookies/">{{t "Cookie policy"}}</a></p>
-    <button type="button" class="btn btn-small" data-cookie-ok>{{t "OK"}}</button>
-</div>
+<dialog class="cookie-pop" id="cookie-pop" aria-labelledby="cookie-pop-h">
+    <svg class="cookie-mark" width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 2 46 24 24 46 2 24z" fill="#E41E20"/><path d="M24 12.5 35.5 24 24 35.5 12.5 24z" fill="#000"/><path d="M24 19 29 24l-5 5-5-5z" fill="#E41E20"/></svg>
+    <h2 id="cookie-pop-h">{{t "Cookies"}}</h2>
+    <p>{{t "We use only the cookies needed for signing in. No ads, no tracking."}}</p>
+    <form method="dialog" class="cookie-actions">
+        <button class="btn" type="submit" data-cookie-ok>{{t "OK"}}</button>
+        <a href="{{@site.url}}/cookies/">{{t "Cookie policy"}}</a>
+    </form>
+</dialog>

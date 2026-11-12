@@ -7,26 +7,33 @@
         <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name">{{name}}</span><meta itemprop="item" content="{{url absolute="true"}}"><meta itemprop="position" content="3"></li>
     </ol>
 </nav>
-{{/author}}
-<section class="listing wrap">
-    {{#author}}
-    <header class="profile">
-        {{#if profile_image}}<img class="avatar avatar-l" src="{{img_url profile_image size="m"}}" alt="">{{/if}}
+{{!-- A profile: who the writer is, then everything they have published --}}
+<header class="profile">
+    <div class="profile-cover" aria-hidden="true"></div>
+    <div class="profile-in wrap">
+        {{#if profile_image}}<img class="avatar avatar-l" src="{{img_url profile_image size="m"}}" alt="" width="112" height="112">{{else}}<span class="avatar avatar-l avatar-blank" aria-hidden="true"><svg viewBox="0 0 24 24" width="60%" height="60%"><circle cx="12" cy="8.5" r="4.2" fill="currentColor"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="currentColor"/></svg></span>{{/if}}
         <div class="profile-text">
-            <h1 class="listing-title">{{name}}</h1>
-            {{#if bio}}<p class="listing-dek">{{bio}}</p>{{/if}}
+            <p class="channel-meta"><span>{{t "Profile"}}</span>{{#if ../pagination.total}}<span>{{plural ../pagination.total empty="" singular=(t "% article") plural=(t "% articles")}}</span>{{/if}}</p>
+            <h1 class="profile-name">{{name}}</h1>
+            {{#if bio}}<p class="profile-bio">{{bio}}</p>{{/if}}
             <p class="profile-links">
                 {{#if location}}<span>{{location}}</span>{{/if}}
                 {{#if website}}<a href="{{website}}" rel="me noopener">{{t "Website"}}</a>{{/if}}
                 {{#if twitter}}<a href="{{social_url type="twitter"}}" rel="me noopener">X</a>{{/if}}
             </p>
-            {{#if @site.members_enabled}}<a class="btn" href="#/portal/signup">{{t "Follow {name} by email" name=name}}</a>{{/if}}
         </div>
-    </header>
-    {{/author}}
-    <h2 class="rail-title">{{t "Archive"}}</h2>
-    <div class="rail-grid">
-        {{#foreach posts}}{{> "card"}}{{/foreach}}
+        {{#if @site.members_enabled}}<a class="btn profile-follow" href="#/portal/signup">{{t "Follow {name} by email" name=name}}</a>{{/if}}
     </div>
-    {{pagination}}
-</section>
+</header>
+{{/author}}
+<div class="feed-wrap wrap">
+    {{> "rail-left"}}
+    <div class="feed">
+        <div class="feed-part fp-a">
+            <h2 class="sr-only">{{t "Archive"}}</h2>
+            <div class="feed-list" data-feed-list>{{#foreach posts}}{{> "card"}}{{/foreach}}</div>
+            {{pagination}}
+        </div>
+    </div>
+    {{> "rail-right"}}
+</div>

@@ -1,0 +1,14 @@
+{{!-- First page of a tab session only (the class "loading" is set in <head>; never with reduced motion).
+     It sits above content that is already rendered. oda.js runs it and removes it; if the script never
+     arrives, a CSS timeout removes it. --}}
+<div class="loader" id="loader" aria-hidden="true">
+    <div class="loader-slab">
+        <div class="loader-in">
+            <span class="loader-mark">
+                <svg viewBox="0 0 32 32" width="96" height="96"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg>
+                <svg class="loader-fill" viewBox="0 0 32 32" width="96" height="96"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg>
+            </span>
+            <span class="loader-pct"><span data-loader-pct>0</span>%</span>
+        </div>
+    </div>
+</div>

@@ -1,16 +1,11 @@
 {{!< default}}
 {{!-- Art: a gallery wall. Images are never cropped; the work keeps its own proportions. --}}
+{{#tag}}{{> "channel-head" total=../pagination.total}}{{/tag}}
 <section class="gallery-page">
-    {{#tag}}
-    <header class="gallery-head">
-        <h1 class="gallery-title">{{name}}</h1>
-        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
-    </header>
-    {{/tag}}
-    <div class="gallery">
+    <div class="gallery" data-feed-list>
         {{#foreach posts}}
         <article class="art{{#unless feature_image}} art-text{{/unless}}">
-            <a class="art-link" href="{{url}}">
+            <a class="art-link" href="{{url}}" data-cursor="view">
                 {{#if feature_image}}
                 <img srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
                      sizes="(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw" src="{{img_url feature_image size="m"}}"

@@ -1,14 +1,15 @@
-{{!-- "Shkruaj artikullin tënd": the invitation at the top of the home page.
+{{!-- The composer at the top of the feed: "Shkruaj artikullin tënd".
      It opens to two paths: write once without an account (the piece goes to the editors' queue in Redaksia,
-     nothing is published from here), or sign in as an ODA author. Links: /#shkruaj opens it, /#shkruaj-nje-here opens the sheet. --}}
-<section class="write" id="shkruaj" aria-labelledby="write-h" data-write>
+     nothing is published from here), or sign in as an ODA author. Links: /#shkruaj opens it, /#shkruaj-nje-here opens the sheet.
+     Text only for now: there is no control here that does nothing. --}}
+<section class="write composer" id="shkruaj" aria-labelledby="write-h" data-write>
     <div class="write-bar">
+        <span class="avatar avatar-blank composer-ava" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 2.5h8l2.6 7.2L12 22 5.4 9.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 22v-8.6" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11.6" r="1.5" fill="currentColor"/></svg></span>
         <div class="write-text">
             <h2 class="write-h" id="write-h">{{t "In the oda, the floor goes to the guest."}}</h2>
             <p class="write-dek">{{t "Have a story nobody has told, a document that should be read, or an argument with no place elsewhere? Write it. The editors read it carefully, check it and get back to you."}}</p>
         </div>
         <button class="write-go" type="button" aria-expanded="false" aria-controls="write-panel" data-write-toggle>
-            <svg class="write-nib" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.5h8l2.6 7.2L12 22 5.4 9.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 22v-8.6" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11.6" r="1.5" fill="currentColor"/></svg>
             <span>{{t "Write your article"}}</span>
             <svg class="write-chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5 6 8.5l4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
         </button>

@@ -1,13 +1,13 @@
 {{!< default}}
-<section class="listing wrap">
-    {{#tag}}
-    <header class="listing-head">
-        <h1 class="listing-title">{{name}}</h1>
-        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
-    </header>
-    {{/tag}}
-    <div class="rail-grid">
-        {{#foreach posts}}{{> "card"}}{{/foreach}}
+{{!-- A channel: the topic's colour on top, its posts below --}}
+{{#tag}}{{> "channel-head" total=../pagination.total}}{{/tag}}
+<div class="feed-wrap wrap">
+    {{> "rail-left"}}
+    <div class="feed">
+        <div class="feed-part fp-a">
+            <div class="feed-list" data-feed-list>{{#foreach posts}}{{> "card"}}{{/foreach}}</div>
+            {{pagination}}
+        </div>
     </div>
-    {{pagination}}
-</section>
+    {{> "rail-right"}}
+</div>

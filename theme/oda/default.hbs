@@ -2,44 +2,62 @@
 <html lang="{{@site.locale}}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{meta_title}}</title>
-    <script>document.documentElement.classList.add("js")</script>
-    <link rel="preload" href="{{asset "fonts/barlow-condensed-latin-700-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{asset "fonts/familjen-grotesk-latin-wght-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
+    {{!-- "js" lets the styles enhance; "loading" shows the loader once per tab session, never with reduced motion --}}
+    <script>(function(c){c.add("js");try{if(!sessionStorage.getItem("oda-seen")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)c.add("loading")}catch(e){}})(document.documentElement.classList)</script>
+    <link rel="preload" href="{{asset "fonts/archivo-latin-standard-normal.woff2"}}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{asset "css/oda.css"}}">
     <meta name="theme-color" content="#000000">
     {{{block "head"}}}
     {{ghost_head}}
 </head>
-<body class="{{body_class}}" data-api="{{@custom.api_url}}">
+<body class="{{body_class}}" data-api="{{@custom.api_url}}"{{#is "post"}}{{#post}}{{#primary_tag}} data-topic="{{slug}}"{{/primary_tag}}{{/post}}{{/is}}{{#is "tag"}}{{#tag}} data-topic="{{slug}}"{{/tag}}{{/is}}>
 <a class="skip" href="#main">{{t "Skip to content"}}</a>
+{{> "loader"}}
 
-<header class="site-head">
+<header class="site-head" data-head>
     {{> "live-bar"}}
-    <nav class="section-bar" aria-label="{{t "Sections"}}">
-        {{navigation}}
-    </nav>
     <div class="head-row">
         <a class="logo" href="{{@site.url}}" aria-label="{{@site.title}}">{{#if @site.logo}}<img src="{{@site.logo}}" alt="{{@site.title}}">{{else}}<svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg><span>ODA</span>{{/if}}</a>
         {{#is "post"}}{{#post}}{{#primary_tag}}<a class="head-section" href="{{url}}">{{name}}</a>{{/primary_tag}}{{/post}}{{/is}}
         <div class="head-actions">
-            {{#if @custom.english_section_path}}<a class="head-link hide-s" href="{{@custom.english_section_path}}" hreflang="en">English</a>{{/if}}
-            {{#if @site.members_enabled}}
-                <a class="head-link hide-s" href="#/portal/signup">{{t "Newsletter"}}</a>
-                {{#if @member}}
-                    <a class="pill" href="#/portal/account">{{t "Account"}}</a>
-                {{else}}
-                    <a class="pill" href="#/portal/signup">{{t "Subscribe"}}</a>
-                    <a class="head-link" href="#/portal/signin">{{t "Sign in"}}</a>
-                {{/if}}
-            {{/if}}
-            <button class="icon-btn" data-ghost-search aria-label="{{t "Search"}}">
+            <button class="icon-btn" type="button" data-ghost-search aria-label="{{t "Search"}}">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             </button>
+            {{#if @site.members_enabled}}
+                {{#if @member}}
+                    <a class="pill hide-s" href="#/portal/account">{{t "Account"}}</a>
+                {{else}}
+                    <a class="head-link hide-s" href="#/portal/signin">{{t "Sign in"}}</a>
+                    <a class="pill" href="#/portal/signup">{{t "Subscribe"}}</a>
+                {{/if}}
+            {{/if}}
+            <a class="menu-btn" href="#menu" role="button" data-menu-open aria-controls="menu" aria-expanded="false" aria-label="{{t "Menu"}}">
+                <svg width="30" height="13" viewBox="0 0 30 13" aria-hidden="true"><path class="bar bar-a" d="M8.5 0H30l-2.9 4H5.6z" fill="currentColor"/><path class="bar bar-b" d="M2.9 9h21.4l-2.9 4H0z" fill="currentColor"/></svg>
+            </a>
         </div>
+        {{#is "post"}}<span class="read-bar" data-read-bar aria-hidden="true"></span>{{/is}}
     </div>
 </header>
+
+{{!-- Full-screen menu. Without JavaScript it opens through the #menu link (the :target rule). --}}
+<div class="menu" id="menu" data-menu role="dialog" aria-modal="true" aria-label="{{t "Menu"}}">
+    <div class="menu-top">
+        <a class="logo" href="{{@site.url}}" aria-label="{{@site.title}}"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg><span>ODA</span></a>
+        <a class="menu-btn is-x" href="#main" role="button" data-menu-close aria-label="{{t "Close"}}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M4 4l16 16M20 4 4 20"/></svg>
+        </a>
+    </div>
+    <nav class="menu-main" aria-label="{{t "Sections"}}">{{navigation}}</nav>
+    <div class="menu-foot">
+        <nav class="menu-second" aria-label="{{t "About ODA"}}">{{navigation type="secondary"}}</nav>
+        <p class="menu-links">
+            {{#if @custom.english_section_path}}<a href="{{@custom.english_section_path}}" hreflang="en">English</a>{{/if}}
+            {{#if @site.members_enabled}}<a href="#/portal/signup">{{t "Newsletter"}}</a>{{#if @member}}<a href="#/portal/account">{{t "Account"}}</a>{{else}}<a href="#/portal/signin">{{t "Sign in"}}</a>{{/if}}{{/if}}
+        </p>
+    </div>
+</div>
 
 <main id="main">
 {{> "breadcrumbs"}}
@@ -47,7 +65,7 @@
 </main>
 
 <footer class="site-foot">
-    <div class="foot-mark" aria-hidden="true">ODA</div>
+    <div class="foot-mark" aria-hidden="true" data-reveal><svg class="foot-bob" viewBox="0 0 32 32"><rect width="32" height="32" fill="#E41E20"/><path d="M7 7H25V25H18V21H21V11H11V21H14V25H7Z" fill="#fff"/></svg><span class="mask"><span>ODA</span></span></div>
     <div class="foot-row">
         <nav aria-label="{{t "About ODA"}}">{{navigation type="secondary"}}</nav>
         <p class="foot-line">{{t "Independent publishing. Every fact with a source."}}</p>
@@ -55,6 +73,7 @@
     </div>
 </footer>
 
+{{> "tabbar"}}
 {{#if @site.members_enabled}}{{#unless @member}}{{> "newsletter-popup"}}{{> "sticky-cta"}}{{/unless}}{{/if}}
 {{#if @custom.show_cookie_notice}}{{> "cookie-notice"}}{{/if}}
 

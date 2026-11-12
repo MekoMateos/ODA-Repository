@@ -1,10 +1,12 @@
 {{!< default}}
 {{#post}}
 <article class="article {{post_class}}"{{#has tag="#live"}} data-live{{/has}}{{#has tag="protesta,#live"}} data-timeline{{/has}}>
+    {{!-- The head of the article sits on the topic's colour --}}
     <header class="article-head">
+        <div class="article-head-in">
         {{#has tag="#live"}}<p class="live-flag"><span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span> {{t "Updated"}} <time datetime="{{date updated_at format="YYYY-MM-DDTHH:mm"}}">{{date updated_at format="HH:mm"}}</time></p>{{/has}}
         {{#has tag="Kërkim,kerkim"}}<p class="research-kicker">{{t "ODA research"}}</p>{{/has}}
-        <div class="article-kicker">{{> "proof"}}</div>
+        <div class="article-kicker">{{#primary_tag}}<a class="chip" href="{{url}}">{{name}}</a>{{/primary_tag}}{{> "proof"}}</div>
         <h1 class="article-title">{{title}}</h1>
         {{#has tag="Kërkim,kerkim"}}{{else}}{{#if custom_excerpt}}<p class="article-dek">{{custom_excerpt}}</p>{{/if}}{{/has}}
         <div class="article-byline">
@@ -14,6 +16,7 @@
             <span class="byline-authors">{{#foreach authors}}<a href="{{url}}">{{name}}</a>{{#unless @last}}, {{/unless}}{{/foreach}}</span>
             {{/has}}
             <span class="byline-meta"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time></span>
+        </div>
         </div>
     </header>
 
@@ -84,12 +87,15 @@
     {{/if}}
 </article>
 
-{{#get "posts" filter="tags:{{primary_tag.slug}}+id:-{{id}}" limit="3" include="authors,tags" as |related|}}
+{{#get "posts" filter="tags:{{primary_tag.slug}}+id:-{{id}}" limit="4" include="authors,tags" as |related|}}
 {{#if related}}
-<section class="read-next" aria-labelledby="more-h">
-    <div class="topic-head"><h2 id="more-h">{{t "Read next"}}</h2></div>
-    <div class="grid grid-3">
-        {{#foreach related}}{{> "card"}}{{/foreach}}
+<section class="band read-next" data-wipe aria-labelledby="more-h">
+    <header class="band-head wrap">
+        <h2 class="band-name" id="more-h"><span class="mask"><span>{{t "Read next"}}</span></span></h2>
+        {{#if ../primary_tag}}<a class="pill band-go" href="{{../primary_tag.url}}">{{t "Open the channel"}}</a>{{/if}}
+    </header>
+    <div class="band-rail" data-drag>
+        {{#foreach related}}{{> "tile"}}{{/foreach}}
     </div>
 </section>
 {{/if}}
