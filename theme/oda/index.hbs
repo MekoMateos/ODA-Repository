@@ -1,8 +1,12 @@
 {{!< default}}
-<section class="listing wrap">
-    <h1 class="listing-title">{{t "All articles"}}</h1>
-    <div class="rail-grid">
-        {{#foreach posts}}{{> "card"}}{{/foreach}}
+<div class="feed-wrap wrap">
+    {{> "rail-left"}}
+    <div class="feed">
+        <div class="feed-part fp-a">
+            <header class="feed-head"><h1 class="feed-title">{{t "All articles"}}</h1></header>
+            <div class="feed-list" data-feed-list>{{#foreach posts}}{{> "card"}}{{/foreach}}</div>
+            {{pagination}}
+        </div>
     </div>
-    {{pagination}}
-</section>
+    {{> "rail-right"}}
+</div>

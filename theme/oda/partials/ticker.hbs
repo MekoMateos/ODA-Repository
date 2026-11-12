@@ -1,0 +1,13 @@
+{{!-- The latest headlines, sliding under the header. oda.js doubles the list so it loops; without it the row stands still. --}}
+{{#get "posts" limit="8" filter="tag:-{{@custom.takes_tag}}" include="tags" as |fresh|}}
+{{#if fresh}}
+<div class="ticker" data-ticker aria-label="{{t "Latest"}}">
+    <span class="ticker-label">{{t "Latest"}}</span>
+    <div class="ticker-view">
+        <ul class="ticker-track">
+            {{#foreach fresh}}<li data-topic="{{primary_tag.slug}}"><time datetime="{{date format="YYYY-MM-DDTHH:mm:ssZ"}}" data-ago>{{date format="D MMM"}}</time><a href="{{url}}">{{title}}</a></li>{{/foreach}}
+        </ul>
+    </div>
+</div>
+{{/if}}
+{{/get}}

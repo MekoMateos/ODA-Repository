@@ -1,12 +1,7 @@
 {{!< default}}
 {{!-- Protests: live coverage first, then the rights guide, then everything we have published, newest first --}}
+{{#tag}}{{> "channel-head" total=../pagination.total}}{{/tag}}
 <section class="protest-page">
-    {{#tag}}
-    <header class="protest-head wrap">
-        <h1 class="listing-title">{{name}}</h1>
-        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
-    </header>
-    {{/tag}}
 
     {{#get "posts" filter="tag:hash-live+tag:protesta" limit="3" as |live|}}
     {{#if live}}
@@ -35,7 +30,7 @@
 
     <div class="protest-list wrap">
         <h2 class="rail-title">{{t "All protest coverage"}}</h2>
-        <ol class="timeline" reversed>
+        <ol class="timeline" reversed data-feed-list>
             {{#foreach posts}}
             <li class="tl-item{{#has tag="#live"}} tl-live{{/has}}">
                 <time class="tl-date" datetime="{{date format="YYYY-MM-DD"}}"><span class="tl-day">{{date format="D"}}</span> <span class="tl-month">{{date format="MMM YYYY"}}</span></time>

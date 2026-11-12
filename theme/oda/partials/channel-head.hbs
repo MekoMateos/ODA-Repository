@@ -1,0 +1,8 @@
+{{!-- The head of a channel (a tag page): the topic's colour, its name set large, what it covers. --}}
+<header class="channel topic-{{slug}}" data-topic="{{slug}}" data-accent="{{slug}}">
+    <div class="channel-in wrap">
+        <p class="channel-meta"><span>{{t "Channel"}}</span>{{#if total}}<span>{{plural total empty="" singular=(t "% article") plural=(t "% articles")}}</span>{{/if}}</p>
+        <h1 class="channel-name"><span class="mask"><span>{{name}}</span></span></h1>
+        {{#if description}}<p class="channel-dek">{{description}}</p>{{/if}}
+    </div>
+</header>

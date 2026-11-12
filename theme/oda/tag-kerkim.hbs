@@ -1,14 +1,9 @@
 {{!< default}}
 {{!-- Research: listed like a journal's table of contents --}}
+{{#tag}}{{> "channel-head" total=../pagination.total}}{{/tag}}
 <section class="listing wrap research-page">
-    {{#tag}}
-    <header class="listing-head research-head">
-        <h1 class="listing-title">{{name}}</h1>
-        {{#if description}}<p class="listing-dek">{{description}}</p>{{/if}}
-        <p class="research-how">{{t "Every study shows its method and data, and is checked by the editors before publication."}} <a href="{{@site.url}}/politika-editoriale/">{{t "How we verify"}}</a></p>
-    </header>
-    {{/tag}}
-    <ul class="papers">
+    <p class="research-how">{{t "Every study shows its method and data, and is checked by the editors before publication."}} <a href="{{@site.url}}/politika-editoriale/">{{t "How we verify"}}</a></p>
+    <ul class="papers" data-feed-list>
         {{#foreach posts}}{{> "paper"}}{{/foreach}}
     </ul>
     {{pagination}}

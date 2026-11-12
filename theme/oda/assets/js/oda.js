@@ -1,21 +1,52 @@
-// Scroll reveal for sections below the fold (styles in kuqezi.css; skipped if reduced motion is on).
-(function () {
-    var targets = document.querySelectorAll('.takes, .topic, .writers, .join, .read-next, .author-box, .evidence');
-    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-        });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    targets.forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight) return; // already visible on load: leave as is
-        el.classList.add('reveal');
-        io.observe(el);
-    });
+// ODA theme script, v0.7. No libraries, no tracking.
+// Every block below stands on its own: if one fails, the rest of the page still works,
+// and nothing on the page depends on this file to be readable.
+var odaRoot = document.documentElement;
+var odaSq = odaRoot.lang.indexOf('sq') === 0;
+var odaReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var odaFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+var odaPhone = window.matchMedia('(max-width: 767px), (max-width: 900px) and (pointer: coarse)');
+
+// Styles may hide things for an entrance only under "oda-on", so it is set here, by the script that reveals them.
+// "oda-in" starts the first-screen entrance; the timer is a safety net in case nothing else sets it.
+if (!odaReduce) {
+    odaRoot.classList.add('oda-on');
+    setTimeout(function () { odaRoot.classList.add('oda-in'); }, 2600);
+}
+
+// ---------- One animation loop for everything that follows the scroll or the pointer ----------
+// Jobs run at most once a frame; a job returns true while it still has easing to finish.
+var odaFrame = (function () {
+    var jobs = [], queued = false;
+    function run() {
+        queued = false;
+        var y = window.scrollY, h = window.innerHeight, more = false;
+        for (var i = 0; i < jobs.length; i++) { try { if (jobs[i](y, h)) more = true; } catch (e) {} }
+        if (more) ask();
+    }
+    function ask() { if (!queued) { queued = true; requestAnimationFrame(run); } }
+    window.addEventListener('scroll', ask, { passive: true });
+    window.addEventListener('resize', ask, { passive: true });
+    return { add: function (fn) { jobs.push(fn); ask(); }, ask: ask };
 })();
 
-// ODA theme script: turns the "Burimet" / "Sources" section of an article into the evidence box.
+// A tiny notice board: the pop-ups tell each other when one opens or closes, so they never stack.
+var odaBus = (function () {
+    var fns = [];
+    return { on: function (fn) { fns.push(fn); }, emit: function () { fns.forEach(function (fn) { try { fn(); } catch (e) {} }); } };
+})();
+
+// The header's real height (the live bar can add to it) for everything that sticks below it.
+(function () {
+    var head = document.querySelector('[data-head]');
+    if (!head) return;
+    function set() { odaRoot.style.setProperty('--head-now', head.offsetHeight + 'px'); }
+    set();
+    if ('ResizeObserver' in window) new ResizeObserver(set).observe(head);
+    else window.addEventListener('resize', set, { passive: true });
+})();
+
+// ---------- The "Burimet" / "Sources" section of an article becomes the evidence box ----------
 // Writers just add a heading called "Burimet" (or "Sources") at the end of the article,
 // followed by a numbered or bulleted list of sources. No plugins, no tracking.
 (function () {
@@ -47,7 +78,7 @@
     if (count) {
         var tally = document.createElement('p');
         tally.className = 'evidence-count';
-        tally.textContent = count + (document.documentElement.lang.indexOf('sq') === 0
+        tally.textContent = count + (odaSq
             ? (count === 1 ? ' burim i lidhur' : ' burime të lidhura')
             : (count === 1 ? ' linked source' : ' linked sources'));
         heading.after(tally);
@@ -60,19 +91,19 @@
     });
 })();
 
-// Share button: native share sheet on phones, copy link elsewhere.
-(function () {
-    var btn = document.querySelector('[data-share]');
+// ---------- Share: the phone's share sheet where there is one, otherwise the link is copied ----------
+// One listener for every share button: the one on an article and the one on each post in the feed.
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-share]') : null;
     if (!btn) return;
-    btn.addEventListener('click', function () {
-        var data = { title: document.title, url: location.href };
-        if (navigator.share) { navigator.share(data).catch(function () {}); return; }
-        if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () {
-            var old = btn.textContent; btn.textContent = document.documentElement.lang.indexOf('sq') === 0 ? 'Lidhja u kopjua' : 'Link copied';
-            setTimeout(function () { btn.textContent = old; }, 1800);
-        });
-    });
-})();
+    var url = btn.getAttribute('data-url') || location.href, title = btn.getAttribute('data-title') || document.title;
+    if (navigator.share) { navigator.share({ title: title, url: url }).catch(function () {}); return; }
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () {
+        var label = btn.querySelector('span') || btn, old = label.textContent;
+        label.textContent = odaSq ? 'Lidhja u kopjua' : 'Link copied';
+        setTimeout(function () { label.textContent = old; }, 1800);
+    }, function () {});
+});
 
 // ---------- Small storage helper (storage can be blocked; the page must still work) ----------
 var odaStore = {
@@ -84,7 +115,8 @@ var DAY = 86400000;
 
 // ---------- Newsletter pop-up ----------
 // Shows after the reader has read half the page or spent 40 seconds, at most once every 14 days,
-// never on the thank-you page, and never if they already subscribed from this browser.
+// never on the thank-you page, never if they already subscribed from this browser,
+// and never while the cookie pop-up, the loader or the menu is on screen, or while someone is writing in the composer.
 (function () {
     var pop = document.getElementById('nl-pop');
     if (!pop || typeof pop.showModal !== 'function') return;
@@ -92,56 +124,75 @@ var DAY = 86400000;
     var last = Number(odaStore.get('oda-nl-seen') || 0);
     if (odaStore.get('oda-subscribed') || Date.now() - last < 14 * DAY) return;
 
-    var small = window.matchMedia('(max-width: 640px)');
-    var shown = false;
+    var shown = false, waiting = false;
+    function blocked() { var c = odaRoot.classList; return c.contains('cookie-open') || c.contains('loading') || c.contains('menu-open') || c.contains('write-open'); }
     function open() {
-        if (shown) return; shown = true;
+        if (shown) return;
+        if (blocked()) { waiting = true; return; }   // one pop-up at a time
+        shown = true;
         odaStore.set('oda-nl-seen', String(Date.now()));
-        document.documentElement.classList.add('nl-open');
-        if (small.matches) pop.show(); else pop.showModal();   // phones: non-blocking bottom sheet
+        odaRoot.classList.add('nl-open');
+        if (odaPhone.matches) pop.show(); else pop.showModal();   // phones: a sheet above the tab bar that does not block the page
+        odaBus.emit();
     }
-    function close() { pop.close(); document.documentElement.classList.remove('nl-open'); }
-    pop.addEventListener('close', function () { document.documentElement.classList.remove('nl-open'); });
+    odaBus.on(function () { if (waiting && !shown && !blocked()) { waiting = false; setTimeout(open, 12000); } });
+    function close() { pop.close(); }
+    pop.addEventListener('close', function () { odaRoot.classList.remove('nl-open'); odaBus.emit(); });
     pop.querySelectorAll('[data-nl-close]').forEach(function (b) { b.addEventListener('click', close); });
     pop.addEventListener('click', function (e) { if (e.target === pop) close(); });
 
-    var timer = setTimeout(open, 40000);
-    window.addEventListener('scroll', function onScroll() {
-        var h = document.documentElement;
-        if ((h.scrollTop + window.innerHeight) / h.scrollHeight > 0.5) { clearTimeout(timer); window.removeEventListener('scroll', onScroll); open(); }
-    }, { passive: true });
+    var timer = setTimeout(open, 40000), armed = true;
+    odaFrame.add(function (y, h) {
+        if (armed && (y + h) / odaRoot.scrollHeight > 0.5) { armed = false; clearTimeout(timer); open(); }
+        return false;
+    });
 })();
 
-// ---------- Sticky subscribe bar (phones) ----------
+// ---------- Sticky subscribe bar (phones, above the tab bar) ----------
 (function () {
     var bar = document.getElementById('sticky-cta');
     if (!bar || odaStore.get('oda-cta-closed') || odaStore.get('oda-subscribed')) return;
     var join = document.querySelector('.join');
-    var joinVisible = false;
-    function update() {
-        var scrolled = window.scrollY > 600;
-        var popOpen = document.documentElement.classList.contains('nl-open');
-        bar.hidden = !scrolled || joinVisible || popOpen;
-        document.documentElement.classList.toggle('cta-on', !bar.hidden);
+    var joinVisible = false, closed = false;
+    function update(y) {
+        if (closed) return false;
+        var c = odaRoot.classList;
+        var hide = (typeof y === 'number' ? y : window.scrollY) < 600 || joinVisible || c.contains('nl-open') || c.contains('cookie-open') || c.contains('menu-open') || c.contains('loading') || c.contains('write-open');
+        if (bar.hidden !== hide) { bar.hidden = hide; c.toggle('cta-on', !hide); }
+        return false;
     }
     if (join && 'IntersectionObserver' in window) {
         new IntersectionObserver(function (es) { joinVisible = es[0].isIntersecting; update(); }).observe(join);
     }
-    window.addEventListener('scroll', update, { passive: true });
+    odaFrame.add(update);
+    odaBus.on(update);
     bar.querySelector('[data-cta-close]').addEventListener('click', function () {
-        odaStore.set('oda-cta-closed', '1'); bar.hidden = true; document.documentElement.classList.remove('cta-on');
+        closed = true; odaStore.set('oda-cta-closed', '1'); bar.hidden = true; odaRoot.classList.remove('cta-on');
     });
-    setInterval(update, 1500);
 })();
 
-// ---------- Cookie notice (information only: necessary cookies, no tracking) ----------
+// ---------- Cookie pop-up (information only: necessary cookies, no tracking) ----------
+// In the middle of the screen on the first visit, once the loader has gone. There is nothing to accept or refuse:
+// closing it by any route (the button, Esc, a click outside) is remembered in this browser.
 (function () {
-    var note = document.getElementById('cookie-note');
-    if (!note || odaStore.get('oda-cookie-ok')) return;
-    note.hidden = false;
-    note.querySelector('[data-cookie-ok]').addEventListener('click', function () {
-        odaStore.set('oda-cookie-ok', '1'); note.hidden = true;
+    var pop = document.getElementById('cookie-pop');
+    if (!pop || typeof pop.showModal !== 'function' || odaStore.get('oda-cookie-ok')) return;
+    var shown = false;
+    function open() {
+        var c = odaRoot.classList;
+        if (shown || c.contains('loading') || c.contains('menu-open')) return;
+        shown = true;
+        c.add('cookie-open');
+        pop.showModal();
+        odaBus.emit();
+    }
+    pop.addEventListener('close', function () { odaStore.set('oda-cookie-ok', '1'); odaRoot.classList.remove('cookie-open'); odaBus.emit(); });
+    pop.addEventListener('click', function (e) {
+        var r = pop.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) pop.close();
     });
+    odaBus.on(function () { if (!shown) setTimeout(open, 350); });
+    setTimeout(open, 3200);
 })();
 
 // ---------- After a successful signup: remember it and go to the thank-you page ----------
@@ -188,8 +239,6 @@ var DAY = 86400000;
 // =====================================================================
 // v0.5: live coverage, research, art labels, reader polls, student resources
 // =====================================================================
-var odaSq = document.documentElement.lang.indexOf('sq') === 0;
-
 // ---------- Reader API (Redaksia) and the Ghost member session ----------
 var odaApi = (function () {
     var base = (document.body.getAttribute('data-api') || '/api').replace(/\/$/, '');
@@ -479,7 +528,7 @@ function odaDate(iso, withTime) {
             var bar = odaEl('span', 'pr-bar'); var fill = odaEl('i'); bar.appendChild(fill); li.appendChild(bar);
             li.appendChild(odaEl('span', 'pr-n', T.votes(o.votes)));
             list.appendChild(li);
-            requestAnimationFrame(function () { requestAnimationFrame(function () { fill.style.width = o.pct + '%'; }); });
+            requestAnimationFrame(function () { requestAnimationFrame(function () { fill.style.transform = 'scaleX(' + (o.pct / 100) + ')'; }); });
         });
         return list;
     }
@@ -608,7 +657,7 @@ function odaDate(iso, withTime) {
 })();
 
 // =====================================================================
-// v0.6: "Shkruaj artikullin tënd" at the top of the home page, and guest pieces
+// v0.6: "Shkruaj artikullin tënd", now the composer at the top of the feed, and guest pieces
 // =====================================================================
 (function () {
     var root = document.querySelector('[data-write]');
@@ -646,12 +695,27 @@ function odaDate(iso, withTime) {
         toggle.setAttribute('aria-expanded', String(open));
         root.classList.toggle('is-open', open);
         panel.inert = !open; // closed content cannot be reached with the keyboard
+        odaRoot.classList.toggle('write-open', open);   // the subscribe prompts stay away while someone is writing
+        odaBus.emit();
     }
     function view(name) { doors.hidden = name !== 'doors'; form.hidden = name !== 'form'; done.hidden = name !== 'done'; }
-    function openSheet() {
+    // Arriving with a link: by the next frame the page above has its final height, so land there at once, without a long glide.
+    function land(el) {
+        root.classList.add('is-arriving');   // no entrance on arrival: it would move the target while the page lands on it
+        requestAnimationFrame(function () {
+            el.scrollIntoView({ block: 'start', behavior: 'instant' });
+            var y = window.scrollY;
+            // the web font can move the lines above once it arrives: land again, unless the reader has already scrolled
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+                if (Math.abs(window.scrollY - y) < 4) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+            });
+        });
+    }
+    function openSheet(arriving) {
         setOpen(true); view('form'); restore(); loadTurnstile(); count();
         requestAnimationFrame(growAll);
         title.focus({ preventScroll: true });
+        if (arriving === true) { land(form); return; }
         var top = form.getBoundingClientRect().top;
         if (top < 0 || top > window.innerHeight * 0.45) form.scrollIntoView({ block: 'start' });
     }
@@ -662,12 +726,18 @@ function odaDate(iso, withTime) {
     form.querySelector('[data-write-back]').addEventListener('click', function () { save(); view('doors'); openBtn.focus(); });
 
     // Links from anywhere: /#shkruaj opens the two paths, /#shkruaj-nje-here goes straight to the sheet.
-    function fromHash() {
-        if (location.hash === '#shkruaj') { setOpen(true); if (done.hidden) view('doors'); }
-        else if (location.hash === '#shkruaj-nje-here') openSheet();
+    function fromHash(arriving) {
+        if (location.hash === '#shkruaj') { setOpen(true); if (done.hidden && form.hidden) view('doors'); if (arriving === true) land(root); }
+        else if (location.hash === '#shkruaj-nje-here') openSheet(arriving);
     }
-    fromHash();
+    fromHash(true);
     window.addEventListener('hashchange', fromHash);
+    // The "Posto" buttons (left rail, tab bar) point at /#shkruaj: on this page they open the composer even if it was closed again.
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest ? e.target.closest('[data-post-link]') : null;
+        if (!link) return;
+        setOpen(true); if (done.hidden && form.hidden) view('doors');
+    });
 
     function count() {
         var n = wordCount(body.value);
@@ -769,4 +839,387 @@ function odaDate(iso, withTime) {
     by.appendChild(document.createTextNode(' '));
     by.appendChild(odaEl('span', 'guest-flag', odaSq ? 'Shkrim i ftuar' : 'Guest piece'));
     card.remove();
+})();
+
+// =====================================================================
+// v0.7: the feed. Loader, menu, relative time, entrances, the stage, topic accents,
+// ticker, pointer label, draggable rows, joined pages, reading progress.
+// =====================================================================
+
+// ---------- Loader: first page of a tab session (the "loading" class is set in <head>) ----------
+// It covers a page that is already rendered. It ends when the fonts and the lead image have arrived,
+// and never later than 1.2 seconds after the page started loading.
+(function () {
+    var loader = document.getElementById('loader');
+    function enter() { odaRoot.classList.add('oda-in'); odaBus.emit(); }
+    if (!loader || !odaRoot.classList.contains('loading')) { requestAnimationFrame(enter); return; }
+    var pct = loader.querySelector('[data-loader-pct]');
+    var begin = performance.now(), deadline = Math.max(begin + 350, 1200), minEnd = Math.min(begin + 600, deadline);
+    var ready = false, done = false, shown = 0;
+    function show(p) { pct.textContent = p; loader.style.setProperty('--p', p); }
+    function finish() {
+        if (done) return; done = true;
+        show(100);
+        try { window.sessionStorage.setItem('oda-seen', '1'); } catch (e) {}
+        odaRoot.classList.add('loader-out');
+        setTimeout(enter, 180);
+        setTimeout(function () { odaRoot.classList.remove('loading', 'loader-out'); loader.remove(); odaBus.emit(); }, 820);
+    }
+    var waits = [];
+    if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready);
+    var lead = document.querySelector('.stage-img, .article-image img, .post-media img');
+    if (lead && !lead.complete) waits.push(new Promise(function (res) { lead.addEventListener('load', res); lead.addEventListener('error', res); }));
+    Promise.all(waits).then(function () { ready = true; }, function () { ready = true; });
+    function tick(now) {
+        if (done) return;
+        if (now >= deadline || (ready && now >= minEnd)) { finish(); return; }
+        var goal = Math.min(ready ? 100 : 92, ((now - begin) / (minEnd - begin)) * 100);
+        shown = Math.max(shown, goal);
+        show(Math.floor(shown));
+        requestAnimationFrame(tick);
+    }
+    if (document.visibilityState === 'hidden') finish(); else requestAnimationFrame(tick);
+    setTimeout(finish, 1600);   // frames can stall; the page is never left covered
+})();
+
+// ---------- Full-screen menu ----------
+(function () {
+    var menu = document.querySelector('[data-menu]');
+    var openBtn = document.querySelector('[data-menu-open]');
+    if (!menu || !openBtn) return;
+    var closeBtn = menu.querySelector('[data-menu-close]');
+    function isOpen() { return odaRoot.classList.contains('menu-open'); }
+    function set(open) {
+        odaRoot.classList.toggle('menu-open', open);
+        openBtn.setAttribute('aria-expanded', String(open));
+        odaBus.emit();
+        if (open) closeBtn.focus({ preventScroll: true });
+        else if (menu.contains(document.activeElement)) openBtn.focus({ preventScroll: true });
+    }
+    // Without this script the button is a link to #menu; with it, the address stays clean.
+    if (location.hash === '#menu') { history.replaceState(null, '', location.pathname + location.search); set(true); }
+    openBtn.addEventListener('click', function (e) { e.preventDefault(); set(!isOpen()); });
+    closeBtn.addEventListener('click', function (e) { e.preventDefault(); set(false); });
+    menu.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a && a !== closeBtn) set(false); });
+    document.addEventListener('keydown', function (e) {
+        if ((e.key === ' ' || e.key === 'Spacebar') && e.target.matches && e.target.matches('a[role="button"]')) { e.preventDefault(); e.target.click(); return; }
+        if (!isOpen()) return;
+        if (e.key === 'Escape') { set(false); return; }
+        if (e.key !== 'Tab') return;   // keep the keyboard inside the open menu
+        var items = menu.querySelectorAll('a[href], button:not([disabled])');
+        var first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        else if (!menu.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    });
+})();
+
+// ---------- Relative time ----------
+// Pages are cached at the edge, so "2 orë" cannot be printed by the server: it is worked out here
+// from the <time datetime>. Without this script the reader sees the date.
+var odaShortMonths = odaSq ? ['jan', 'shk', 'mar', 'pri', 'maj', 'qer', 'kor', 'gus', 'sht', 'tet', 'nën', 'dhj']
+    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function odaAgo(root) {
+    var now = Date.now(), list = (root || document).querySelectorAll('time[data-ago]');
+    if (root && root.matches && root.matches('time[data-ago]')) list = [root];
+    Array.prototype.forEach.call(list, function (t) {
+        var d = new Date(t.getAttribute('datetime'));
+        if (isNaN(d)) return;
+        var s = (now - d.getTime()) / 1000, out;
+        if (s < 0) return;
+        if (s < 60) out = odaSq ? 'tani' : 'now';
+        else if (s < 3600) out = Math.floor(s / 60) + ' min';
+        else if (s < 86400) out = Math.floor(s / 3600) + (odaSq ? ' orë' : ' h');
+        else if (s < 7 * 86400) out = Math.floor(s / 86400) + (odaSq ? ' ditë' : ' d');
+        else out = d.getDate() + ' ' + odaShortMonths[d.getMonth()] + (d.getFullYear() !== new Date(now).getFullYear() ? ' ' + d.getFullYear() : '');
+        if (t.textContent !== out) t.textContent = out;
+        if (!t.title) t.title = odaDate(d.toISOString(), true);
+    });
+}
+odaAgo();
+setInterval(function () { if (document.visibilityState === 'visible') odaAgo(); }, 60000);
+
+// ---------- Entrances: things rise as they come into view; big words leave their mask ----------
+var odaReveal = (function () {
+    if (odaReduce || !('IntersectionObserver' in window)) return function () {};
+    var RISE = '.feed-post, .mod, .stories, .rail-card, .tile, .paper, .case, .art, .tl-item, .join, .author-box, .evidence, .cite, .guest-box, .poll';
+    var MARK = '[data-reveal], .channel, [data-wipe]';
+    var io = new IntersectionObserver(function (entries) {
+        var i = 0;
+        entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            e.target.style.setProperty('--i', Math.min(i++, 6));
+            e.target.classList.add('in');
+            io.unobserve(e.target);
+        });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    return function (root, fresh) {
+        var h = window.innerHeight;
+        (root || document).querySelectorAll(RISE + ', ' + MARK).forEach(function (el) {
+            if (el._rv) return;
+            el._rv = 1;
+            if (!el.matches(MARK)) {
+                if (!fresh && el.getBoundingClientRect().top < h) return;   // already on screen at load: leave it alone
+                el.setAttribute('data-rv', '');
+            }
+            io.observe(el);
+        });
+    };
+})();
+odaReveal();
+
+// ---------- The stage: lead stories travel sideways while the page scrolls down ----------
+(function () {
+    var stage = document.querySelector('[data-stage]');
+    if (!stage) return;
+    var pin = stage.querySelector('.stage-pin'), track = stage.querySelector('[data-stage-track]');
+    var cards = track.children, n = cards.length;
+    var nowEl = stage.querySelector('[data-stage-now]'), totalEl = stage.querySelector('[data-stage-total]'), bar = stage.querySelector('[data-stage-bar]');
+    function two(x) { return String(x).padStart(2, '0'); }
+    if (!n) { stage.hidden = true; return; }
+    totalEl.textContent = '/ ' + two(n);
+    var current = 0;
+    function count(i) { if (i !== current) { current = i; nowEl.textContent = two(i + 1); } }
+
+    // The drifting words and the floating cards only run while the stage is on screen.
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { stage.classList.toggle('is-live', es[0].isIntersecting); }).observe(stage);
+    else stage.classList.add('is-live');
+
+    if (odaReduce || n < 2) {
+        // A plain row that scrolls sideways: the counter follows it.
+        track.addEventListener('scroll', function () {
+            var max = track.scrollWidth - track.clientWidth;
+            count(max > 0 ? Math.round((track.scrollLeft / max) * (n - 1)) : 0);
+        }, { passive: true });
+        return;
+    }
+
+    stage.style.setProperty('--n', n);
+    stage.classList.add('is-pinned');
+    var x = 0, travel = 0, top = 0, dist = 1, headH = 0;
+    function measure() {
+        headH = parseFloat(getComputedStyle(pin).top) || 0;
+        travel = Math.max(0, track.offsetWidth - pin.clientWidth);
+        top = stage.getBoundingClientRect().top + window.scrollY - headH;
+        dist = Math.max(1, stage.offsetHeight - pin.offsetHeight);
+        odaFrame.ask();
+    }
+    measure();
+    window.addEventListener('resize', measure, { passive: true });
+    window.addEventListener('load', measure);
+    if ('ResizeObserver' in window) new ResizeObserver(measure).observe(track);
+
+    var first = true;
+    odaFrame.add(function (y) {
+        var p = Math.min(1, Math.max(0, (y - top) / dist));
+        var target = -p * travel;
+        if (first) { x = target; first = false; }
+        x += (target - x) * 0.16;
+        if (Math.abs(target - x) < 0.35) x = target;
+        track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+        bar.style.setProperty('--prog', p.toFixed(4));
+        count(Math.min(n - 1, Math.round(p * (n - 1))));
+        return x !== target;
+    });
+
+    // Tilt and sheen under a desktop pointer.
+    if (!odaFine) return;
+    var tilted = null, pending = null;
+    function rest(card) {
+        if (!card) return;
+        card.classList.remove('is-tilt');
+        var link = card.firstElementChild;
+        link.style.setProperty('--rx', '0deg'); link.style.setProperty('--ry', '0deg');
+    }
+    track.addEventListener('pointermove', function (e) {
+        var card = e.target.closest('[data-tilt]');
+        if (card !== tilted) { rest(tilted); tilted = card; }
+        if (!card) { pending = null; return; }
+        var r = card.getBoundingClientRect();
+        pending = { card: card, px: (e.clientX - r.left) / r.width, py: (e.clientY - r.top) / r.height };
+        odaFrame.ask();
+    }, { passive: true });
+    track.addEventListener('pointerleave', function () { rest(tilted); tilted = null; pending = null; });
+    odaFrame.add(function () {
+        if (!pending) return false;
+        var link = pending.card.firstElementChild, px = pending.px, py = pending.py;
+        pending.card.classList.add('is-tilt');
+        link.style.setProperty('--ry', ((px - 0.5) * 9).toFixed(2) + 'deg');
+        link.style.setProperty('--rx', ((0.5 - py) * 7).toFixed(2) + 'deg');
+        link.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+        link.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+        pending = null;
+        return false;
+    });
+})();
+
+// ---------- Topic accent: the page's accent and the browser bar take the colour of the topic on screen ----------
+(function () {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    var base = document.body.getAttribute('data-topic') || '';
+    function apply(slug, src) {
+        if (slug) odaRoot.setAttribute('data-accent', slug); else odaRoot.removeAttribute('data-accent');
+        if (!meta) return;
+        var colour = src ? getComputedStyle(src).getPropertyValue('--tb').trim() : '';
+        meta.setAttribute('content', /^#[0-9a-f]{3,8}$/i.test(colour) ? colour : '#000000');
+    }
+    apply(base, base ? document.body : null);
+    var zones = Array.prototype.slice.call(document.querySelectorAll('.band[data-accent]'));
+    if (!zones.length || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { e.target._mid = e.isIntersecting; });
+        var on = zones.filter(function (z) { return z._mid; }).pop();
+        if (on) apply(on.getAttribute('data-accent'), on); else apply(base, base ? document.body : null);
+    }, { rootMargin: '-48% 0px -48% 0px' });
+    zones.forEach(function (z) { io.observe(z); });
+})();
+
+// ---------- Ticker: the list is doubled so it can loop; it stops under the pointer and off screen ----------
+(function () {
+    var ticker = document.querySelector('[data-ticker]');
+    if (!ticker || odaReduce) return;
+    var track = ticker.querySelector('.ticker-track');
+    var items = Array.prototype.slice.call(track.children);
+    if (items.length < 2) return;
+    var width = track.offsetWidth;
+    items.forEach(function (li) {
+        var copy = li.cloneNode(true);
+        copy.setAttribute('aria-hidden', 'true');
+        copy.querySelectorAll('a').forEach(function (a) { a.tabIndex = -1; });
+        track.appendChild(copy);
+    });
+    ticker.style.setProperty('--dur', Math.max(24, Math.round(width / 48)) + 's');   // about 48px a second
+    ticker.classList.add('is-on');
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { ticker.classList.toggle('is-off', !es[0].isIntersecting); }).observe(ticker);
+})();
+
+// ---------- Loops rest while they are off screen ----------
+(function () {
+    if (odaReduce || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('loop-off', !e.isIntersecting); }); });
+    document.querySelectorAll('.site-foot, .stories, .rail-live, .live-now, .feed-post.tag-hash-live').forEach(function (el) { io.observe(el); });
+})();
+
+// ---------- Rows that scroll sideways can be dragged with a mouse ----------
+(function () {
+    var rail = null, startX = 0, startLeft = 0, moved = false;
+    document.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        var el = e.target.closest('[data-drag]');
+        if (!el || el.scrollWidth <= el.clientWidth + 4) return;
+        rail = el; startX = e.clientX; startLeft = el.scrollLeft; moved = false;
+    });
+    document.addEventListener('pointermove', function (e) {
+        if (!rail) return;
+        var dx = e.clientX - startX;
+        if (!moved && Math.abs(dx) > 6) { moved = true; rail.classList.add('is-drag'); }
+        if (moved) rail.scrollLeft = startLeft - dx;
+    }, { passive: true });
+    function end() {
+        if (!rail) return;
+        var el = rail; rail = null;
+        if (!moved) return;
+        // the click that ends a drag must not open the card under the pointer
+        var stop = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
+        el.addEventListener('click', stop, true);
+        setTimeout(function () { el.classList.remove('is-drag'); el.removeEventListener('click', stop, true); }, 60);
+    }
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+    document.addEventListener('dragstart', function (e) { if (e.target.closest && e.target.closest('[data-drag]')) e.preventDefault(); });
+})();
+
+// ---------- A label that follows a desktop pointer: Lexo, Shiko, Zvarrit ----------
+(function () {
+    if (!odaFine || odaReduce) return;
+    var LABEL = odaSq ? { read: 'Lexo', view: 'Shiko', drag: 'Zvarrit' } : { read: 'Read', view: 'View', drag: 'Drag' };
+    var pill = odaEl('div', 'cursor-pill'), text = odaEl('span');
+    pill.setAttribute('aria-hidden', 'true');
+    pill.appendChild(text);
+    document.body.appendChild(pill);
+    var x = 0, y = 0, tx = 0, ty = 0, kind = '', placed = false;
+    function set(k) {
+        if (k === kind) return;
+        kind = k;
+        if (k) text.textContent = LABEL[k] || '';
+        pill.classList.toggle('is-on', !!k);
+    }
+    document.addEventListener('pointermove', function (e) {
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        tx = e.clientX; ty = e.clientY;
+        if (!placed) { x = tx; y = ty; placed = true; }
+        var t = e.target.closest ? e.target : null, k = '';
+        var el = t && t.closest('[data-cursor]');
+        if (el) k = el.getAttribute('data-cursor');
+        else { var row = t && t.closest('[data-drag]'); if (row && row.scrollWidth > row.clientWidth + 4) k = 'drag'; }
+        set(k);
+        odaFrame.ask();
+    }, { passive: true });
+    document.addEventListener('pointerdown', function () { set(''); }, { passive: true });
+    window.addEventListener('scroll', function () { set(''); }, { passive: true });
+    document.documentElement.addEventListener('pointerleave', function () { set(''); });
+    odaFrame.add(function () {
+        if (!placed) return false;
+        x += (tx - x) * 0.24; y += (ty - y) * 0.24;
+        var settled = Math.abs(tx - x) + Math.abs(ty - y) < 0.5;
+        if (settled) { x = tx; y = ty; }
+        pill.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+        return !settled;
+    });
+})();
+
+// ---------- Joined pages: older posts are added under the list ----------
+// Two pages arrive by themselves as the reader nears the end; after that the "Më shumë" button asks.
+// Without this script the button is an ordinary link to the next page.
+(function () {
+    var nav = document.querySelector('[data-pagination]'), list = document.querySelector('[data-feed-list]');
+    if (!nav || !list || !window.fetch || !window.DOMParser) return;
+    var auto = 2, busy = false;
+    function more() { return nav.querySelector('[data-more]'); }
+    function near() { return nav.getBoundingClientRect().top < window.innerHeight + 700; }
+    function load(byHand) {
+        var link = more();
+        if (!link || busy) return;
+        var url = link.href;
+        busy = true; nav.classList.add('is-busy');
+        fetch(url, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error('page'); return r.text(); }).then(function (html) {
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var fresh = doc.querySelector('[data-feed-list]');
+            if (!fresh) throw new Error('list');
+            var added = Array.prototype.map.call(fresh.children, function (el) { return document.importNode(el, true); });
+            added.forEach(function (el) { list.appendChild(el); });
+            var next = doc.querySelector('[data-pagination] [data-more]');
+            if (next) link.href = next.href; else link.remove();
+            var newer = nav.querySelector('.newer-posts');
+            if (newer) newer.remove();   // the list now starts where the reader started
+            odaAgo(list);
+            odaReveal(list, true);
+            if (byHand && added[0]) { var a = added[0].querySelector('a[href]'); if (a) a.focus({ preventScroll: true }); }
+            busy = false; nav.classList.remove('is-busy');
+            if (auto > 0 && more() && near()) { auto--; load(false); }
+        }).catch(function () { window.location.href = url; });
+    }
+    nav.addEventListener('click', function (e) {
+        var link = e.target.closest('[data-more]');
+        if (!link) return;
+        e.preventDefault();
+        load(true);
+    });
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) {
+        if (es[0].isIntersecting && auto > 0 && !busy) { auto--; load(false); }
+    }, { rootMargin: '0px 0px 700px 0px' }).observe(nav);
+})();
+
+// ---------- Reading progress on articles ----------
+(function () {
+    var bar = document.querySelector('[data-read-bar]'), body = document.querySelector('.article-body');
+    if (!bar || !body) return;
+    var head = document.querySelector('[data-head]');
+    odaFrame.add(function (y, h) {
+        var r = body.getBoundingClientRect(), top = head ? head.offsetHeight : 0;
+        var span = r.height - (h - top);
+        var p = span > 0 ? (top - r.top) / span : (r.bottom < h ? 1 : 0);
+        bar.style.setProperty('--read', Math.min(1, Math.max(0, p)).toFixed(4));
+        return false;
+    });
 })();

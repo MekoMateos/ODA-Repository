@@ -1,0 +1,28 @@
+{{!-- Stories rail: live coverage first, then one circle per topic in its colour, the busiest topic first.
+     On a desktop pointer the story under the cursor widens to show its latest headline. --}}
+<nav class="stories" aria-label="{{t "Topics"}}">
+    <ul class="stories-list" data-drag>
+        {{#get "posts" filter="tag:hash-live" limit="1" fields="title,url" as |live|}}{{#foreach live}}
+        <li><a class="story story-live" href="{{url}}">
+            <span class="story-ring"><span class="live-dot" aria-hidden="true"></span></span>
+            <span class="story-more">{{title}}</span>
+            <span class="story-name">{{t "Live"}}</span>
+        </a></li>
+        {{/foreach}}{{/get}}
+        {{#get "tags" filter="slug:[politike,ekonomi,drejtesi,shoqeri,protesta,kerkim,arti,opinion]" limit="8" include="count.posts" order="count.posts desc" as |topics|}}
+        {{#foreach topics}}
+        <li><a class="story topic-{{slug}}" href="{{url}}">
+            {{#get "posts" filter="tag:{{slug}}" limit="1" fields="title,feature_image" as |last|}}
+            {{#foreach last}}
+            <span class="story-ring">{{#if feature_image}}<img src="{{img_url feature_image size="s"}}" alt="" width="64" height="64" loading="lazy" draggable="false">{{/if}}</span>
+            <span class="story-more">{{title}}</span>
+            {{else}}
+            <span class="story-ring"></span>
+            {{/foreach}}
+            {{/get}}
+            <span class="story-name">{{name}}</span>
+        </a></li>
+        {{/foreach}}
+        {{/get}}
+    </ul>
+</nav>

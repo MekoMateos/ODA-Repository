@@ -1,0 +1,18 @@
+<article class="stage-card {{post_class}}" data-topic="{{primary_tag.slug}}" data-tilt>
+    <a class="stage-link" href="{{url}}" data-cursor="read">
+        {{#if feature_image}}
+        <img class="stage-img" srcset="{{img_url feature_image size="s"}} 480w, {{img_url feature_image size="m"}} 800w, {{img_url feature_image size="l"}} 1200w"
+             sizes="(min-width: 768px) 52vh, 80vw" src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" draggable="false">
+        {{/if}}
+        <span class="stage-shade" aria-hidden="true"></span>
+        <span class="stage-sheen" aria-hidden="true"></span>
+        <span class="stage-top">
+            {{#has tag="#live"}}<span class="live-badge"><span class="live-dot" aria-hidden="true"></span>{{t "Live"}}</span>{{/has}}
+            {{#primary_tag}}<span class="chip">{{name}}</span>{{/primary_tag}}
+        </span>
+        <span class="stage-body">
+            <span class="stage-h">{{title}}</span>
+            <span class="stage-by mono">{{#has tag="#i-ftuar"}}{{t "Guest piece"}}{{else}}{{authors separator=", " autolink="false"}}{{/has}} <time datetime="{{date format="YYYY-MM-DDTHH:mm:ssZ"}}" data-ago>{{date format="D MMM"}}</time></span>
+        </span>
+    </a>
+</article>

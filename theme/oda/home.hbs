@@ -1,119 +1,136 @@
 {{!< default}}
 <h1 class="sr-only">{{@site.title}}: {{@site.description}}</h1>
 
-{{!-- Invitation to write: one piece without an account, or sign in as an author --}}
-{{> "write"}}
+{{> "ticker"}}
 
-{{!-- Lead story: the featured post, or the newest one --}}
-<section class="hero">
-    {{#get "posts" filter="featured:true+tag:-{{@custom.takes_tag}}" limit="1" include="authors,tags" as |lead|}}
-        {{#if lead}}
-            {{#foreach lead}}{{> "card" size="hero"}}{{/foreach}}
-        {{else}}
-            {{#get "posts" filter="tag:-{{@custom.takes_tag}}" limit="1" include="authors,tags" as |first|}}
-                {{#foreach first}}{{> "card" size="hero"}}{{/foreach}}
+{{!-- The stage: lead stories travel sideways while the page scrolls --}}
+{{> "stage"}}
+
+{{!-- The feed: sections on the left, posts in the middle, live / poll / newsletter on the right.
+     Below 1024px it is one column and the right-hand blocks take their place between the posts. --}}
+<div class="feed-wrap wrap" id="feed">
+    {{> "rail-left"}}
+
+    <div class="feed">
+        <div class="feed-part fp-top">
+            {{!-- Composer: write one piece without an account, or sign in as an author --}}
+            {{> "write"}}
+            {{> "stories"}}
+        </div>
+
+        {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}+tag:-rastet+tag:-arti" limit="12" include="authors,tags" as |latest pages|}}
+        <div class="feed-part fp-a">
+            <div class="feed-list">{{#foreach latest from="1" to="3"}}{{> "card"}}{{/foreach}}</div>
+
+            {{!-- Short takes from the editors, shown whole --}}
+            {{#get "posts" filter="tag:{{@custom.takes_tag}}" limit="3" include="authors,tags" as |takes|}}
+            {{#if takes}}
+            <section class="mod mod-takes" aria-labelledby="takes-h">
+                <header class="mod-head">
+                    {{#foreach takes limit="1"}}<span class="date-tag"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMM"}}</time></span>{{/foreach}}
+                    <h2 class="mod-title" id="takes-h">{{t "Short takes from ODA"}}</h2>
+                    <a class="more" href="{{@site.url}}/tag/{{@custom.takes_tag}}/">{{t "All takes"}}</a>
+                </header>
+                <div class="feed-list">{{#foreach takes}}{{> "card" kind="take"}}{{/foreach}}</div>
+            </section>
+            {{/if}}
             {{/get}}
-        {{/if}}
-    {{/get}}
-</section>
 
-<section class="grid grid-3 latest" aria-label="{{t "Latest"}}">
-    {{#get "posts" filter="featured:false+tag:-{{@custom.takes_tag}}+tag:-rastet+tag:-arti" limit="6" include="authors,tags" as |latest|}}
-        {{#foreach latest}}{{> "card"}}{{/foreach}}
-    {{/get}}
-</section>
+            <div class="feed-list">{{#foreach latest from="4" to="6"}}{{> "card"}}{{/foreach}}</div>
+        </div>
 
-{{!-- Short takes from the editors --}}
-{{#get "posts" filter="tag:{{@custom.takes_tag}}" limit="3" include="authors" as |takes|}}
-{{#if takes}}
-<section class="takes" aria-labelledby="takes-h">
-    <div class="takes-head">
-        {{#foreach takes limit="1"}}<span class="date-tag"><time datetime="{{date format="YYYY-MM-DD"}}">{{date format="D MMMM YYYY"}}</time></span>{{/foreach}}
-        <h2 id="takes-h">{{t "Short takes from ODA"}}</h2>
-        <a class="more" href="{{@site.url}}/tag/{{@custom.takes_tag}}/">{{t "All takes"}}</a>
+        <div class="feed-part fp-b">
+            {{!-- Original research --}}
+            {{#get "posts" filter="tag:kerkim" limit="3" include="authors,tags" as |papers|}}
+            {{#if papers}}
+            <section class="mod mod-research topic-kerkim" aria-labelledby="research-h">
+                <header class="mod-head">
+                    <h2 class="mod-title" id="research-h"><a href="{{@site.url}}/tag/kerkim/">{{t "Research"}}</a></h2>
+                    <p class="mod-dek">{{t "Original studies, with the method and the data."}}</p>
+                    <a class="more" href="{{@site.url}}/tag/kerkim/">{{t "All research"}}</a>
+                </header>
+                <ul class="papers">{{#foreach papers}}{{> "paper"}}{{/foreach}}</ul>
+            </section>
+            {{/if}}
+            {{/get}}
+
+            <div class="feed-list">{{#foreach latest from="7" to="9"}}{{> "card"}}{{/foreach}}</div>
+
+            {{!-- Case studies: investigations followed to a result --}}
+            {{#get "posts" filter="tag:rastet" limit="3" include="authors,tags" as |cases|}}
+            {{#if cases}}
+            <section class="mod mod-cases" aria-labelledby="impact-h">
+                <header class="mod-head">
+                    <h2 class="mod-title" id="impact-h">{{t "Impact"}}</h2>
+                    <p class="mod-dek">{{t "What happened after we published."}}</p>
+                    <a class="more" href="{{@site.url}}/tag/rastet/">{{t "All cases"}}</a>
+                </header>
+                <div class="cases" data-drag>{{#foreach cases}}{{> "case-card"}}{{/foreach}}</div>
+            </section>
+            {{/if}}
+            {{/get}}
+
+            <div class="feed-list">{{#foreach latest from="10" to="12"}}{{> "card"}}{{/foreach}}</div>
+        </div>
+
+        <div class="feed-part fp-c">
+            {{!-- Art: a wall that scrolls sideways, images uncropped --}}
+            {{#get "posts" filter="tag:arti" limit="8" include="authors" as |works|}}
+            {{#if works}}
+            <section class="mod mod-art topic-arti" aria-labelledby="art-h">
+                <header class="mod-head">
+                    <h2 class="mod-title" id="art-h"><a href="{{@site.url}}/tag/arti/">{{t "Art"}}</a></h2>
+                    <a class="more" href="{{@site.url}}/tag/arti/">{{t "Open the gallery"}}</a>
+                </header>
+                <ul class="art-wall" data-drag>
+                    {{#foreach works}}
+                    <li><a href="{{url}}" data-cursor="view">
+                        {{#if feature_image}}<img src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy" draggable="false">{{/if}}
+                        <span class="art-cap"><span class="art-title">{{title}}</span><span class="art-by">{{authors separator=", " autolink="false"}}</span></span>
+                    </a></li>
+                    {{/foreach}}
+                </ul>
+            </section>
+            {{/if}}
+            {{/get}}
+
+            {{#if @custom.show_authors_on_home}}
+            <section class="mod mod-writers" aria-labelledby="writers-h">
+                <header class="mod-head">
+                    <h2 class="mod-title" id="writers-h">{{t "Writers"}}</h2>
+                    <a class="more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a>
+                </header>
+                <ul class="writer-strip" data-drag>
+                {{#get "authors" limit="8" include="count.posts" order="count.posts desc" as |writers|}}
+                    {{#foreach writers}}{{#if count.posts}}<li>{{> "author-chip"}}</li>{{/if}}{{/foreach}}
+                {{/get}}
+                </ul>
+            </section>
+            {{/if}}
+
+            {{#if pages.next}}<p class="feed-end"><a class="pill" href="{{@site.url}}/page/2/">{{t "All articles"}}</a></p>{{/if}}
+        </div>
+        {{/get}}
     </div>
-    <div class="grid grid-3 takes-grid">
-        {{#foreach takes}}
-        <article class="take">
-            <h3><a href="{{url}}">{{title}}</a></h3>
-            <p class="take-by">{{#primary_author}}{{#if profile_image}}<img class="avatar avatar-s" src="{{img_url profile_image size="s"}}" alt="">{{/if}}<span>{{name}}</span>{{/primary_author}}</p>
-            <div class="take-text">{{excerpt words="70"}}</div>
-            <a class="take-more" href="{{url}}">{{t "Read the take"}}</a>
-        </article>
-        {{/foreach}}
-    </div>
-</section>
-{{/if}}
-{{/get}}
 
-{{!-- Reader poll: filled in by oda.js from Redaksia; stays hidden when no poll is open --}}
-<section class="poll-band" data-poll-home hidden aria-labelledby="poll-band-h">
-    <div class="poll-band-head"><h2 id="poll-band-h">{{t "Reader poll"}}</h2><a class="more" href="{{@site.url}}/sondazhe/">{{t "All polls"}}</a></div>
-    <div class="poll-slot" data-poll-slot></div>
-</section>
+    {{> "rail-right"}}
+</div>
 
-{{!-- Case studies: investigations followed to a result --}}
-{{#get "posts" filter="tag:rastet" limit="3" include="authors,tags" as |cases|}}
-{{#if cases}}
-<section class="impact" aria-labelledby="impact-h">
-    <div class="topic-head"><h2 id="impact-h">{{t "Impact"}}</h2><p class="impact-dek">{{t "What happened after we published."}}</p><a class="more" href="{{@site.url}}/tag/rastet/">{{t "All cases"}}</a></div>
-    <div class="cases">{{#foreach cases}}{{> "case-card"}}{{/foreach}}</div>
-</section>
-{{/if}}
-{{/get}}
-
-{{!-- Original research --}}
-{{#get "posts" filter="tag:kerkim" limit="3" include="authors,tags" as |papers|}}
-{{#if papers}}
-<section class="research-band" aria-labelledby="research-h">
-    <div class="topic-head"><h2 id="research-h"><a href="{{@site.url}}/tag/kerkim/">{{t "Research"}}</a></h2><p class="impact-dek">{{t "Original studies, with the method and the data."}}</p><a class="more" href="{{@site.url}}/tag/kerkim/">{{t "All research"}}</a></div>
-    <ul class="papers">{{#foreach papers}}{{> "paper"}}{{/foreach}}</ul>
-</section>
-{{/if}}
-{{/get}}
-
-{{!-- Category sections, each with its own colour --}}
+{{!-- One full-width band per topic, each in its own colour --}}
 {{#get "tags" filter="slug:[{{@custom.home_topics}}]" limit="6" as |topics|}}
 {{#foreach topics}}
-<section class="topic topic-{{slug}}" aria-labelledby="topic-{{slug}}">
-    <div class="topic-head"><h2 id="topic-{{slug}}"><a href="{{url}}">{{name}}</a></h2></div>
-    {{#get "posts" filter="tag:{{slug}}+tag:-{{@custom.takes_tag}}+featured:false" limit="4" include="authors,tags" as |tposts|}}
-        <div class="topic-lead">{{#foreach tposts limit="1"}}{{> "card" size="wide"}}{{/foreach}}</div>
-        <div class="grid grid-3 topic-grid">
-            {{#foreach tposts from="2" limit="2"}}{{> "card"}}{{/foreach}}
-            <a class="topic-more" href="{{../url}}"><span>{{t "Read more {name}" name=../name}}</span><svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h7M6 3l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
-        </div>
+<section class="band topic-{{slug}}" data-topic="{{slug}}" data-accent="{{slug}}" data-wipe aria-labelledby="band-{{slug}}">
+    <header class="band-head wrap">
+        <h2 class="band-name" id="band-{{slug}}"><a href="{{url}}"><span class="mask"><span>{{name}}</span></span></a></h2>
+        <a class="pill band-go" href="{{url}}">{{t "Open the channel"}}</a>
+    </header>
+    {{#get "posts" filter="tag:{{slug}}+tag:-{{@custom.takes_tag}}" limit="5" include="authors,tags" as |tposts|}}
+    <div class="band-rail" data-drag>
+        {{#foreach tposts}}{{> "tile"}}{{/foreach}}
+    </div>
     {{/get}}
 </section>
 {{/foreach}}
 {{/get}}
-
-{{!-- Art: a scrolling gallery wall, images uncropped --}}
-{{#get "posts" filter="tag:arti" limit="8" as |works|}}
-{{#if works}}
-<section class="art-band" aria-labelledby="art-h">
-    <div class="topic-head"><h2 id="art-h"><a href="{{@site.url}}/tag/arti/">{{t "Art"}}</a></h2><a class="more" href="{{@site.url}}/tag/arti/">{{t "Open the gallery"}}</a></div>
-    <ul class="art-wall">
-        {{#foreach works}}
-        <li><a href="{{url}}">
-            {{#if feature_image}}<img src="{{img_url feature_image size="m"}}" alt="{{#if feature_image_alt}}{{feature_image_alt}}{{else}}{{title}}{{/if}}" loading="lazy">{{/if}}
-            <span class="art-cap"><span class="art-title">{{title}}</span><span class="art-by">{{authors separator=", " autolink="false"}}</span></span>
-        </a></li>
-        {{/foreach}}
-    </ul>
-</section>
-{{/if}}
-{{/get}}
-
-{{#if @custom.show_authors_on_home}}
-<section class="writers" aria-labelledby="writers-h">
-    <div class="topic-head"><h2 id="writers-h">{{t "Writers"}}</h2><a class="more" href="{{@site.url}}/autoret/">{{t "All writers"}}</a></div>
-    <ul class="writer-strip">
-    {{#get "authors" limit="8" include="count.posts" order="count.posts desc" as |writers|}}
-        {{#foreach writers}}{{#if count.posts}}<li>{{> "author-chip"}}</li>{{/if}}{{/foreach}}
-    {{/get}}
-    </ul>
-</section>
-{{/if}}
 
 {{> "subscribe"}}

@@ -1,0 +1,29 @@
+{{!-- The stage: the lead stories (featured first, else the newest five) travel sideways while the page scrolls down.
+     Without JavaScript, or with reduced motion, it is a plain row that scrolls sideways. --}}
+<section class="stage" data-stage aria-labelledby="stage-h">
+    <div class="stage-pin">
+        <div class="stage-words" aria-hidden="true">
+            <p class="stage-row"><span>{{t "Every fact with a source"}}</span><span>{{t "Every fact with a source"}}</span><span>{{t "Every fact with a source"}}</span><span>{{t "Every fact with a source"}}</span></p>
+            <p class="stage-row stage-row-b"><span>{{t "Independent publishing"}}</span><span>{{t "Independent publishing"}}</span><span>{{t "Independent publishing"}}</span><span>{{t "Independent publishing"}}</span></p>
+        </div>
+        <header class="stage-head">
+            <h2 class="stage-title" id="stage-h">{{t "Today in the oda"}}</h2>
+            <p class="stage-count" aria-hidden="true"><b data-stage-now>01</b><span data-stage-total></span></p>
+        </header>
+        <ol class="stage-track" data-stage-track>
+            {{#get "posts" filter="featured:true" limit="5" include="authors,tags" as |lead|}}
+                {{#if lead}}
+                    {{#foreach lead}}<li>{{> "stage-card"}}</li>{{/foreach}}
+                {{else}}
+                    {{#get "posts" filter="tag:-{{@custom.takes_tag}}" limit="5" include="authors,tags" as |newest|}}
+                        {{#foreach newest}}<li>{{> "stage-card"}}</li>{{/foreach}}
+                    {{/get}}
+                {{/if}}
+            {{/get}}
+        </ol>
+        <div class="stage-foot">
+            <span class="stage-bar" aria-hidden="true"><i data-stage-bar></i></span>
+            <a class="stage-hint" href="#feed"><span>{{t "Skip to the feed"}}</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v7M3 6l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,6 @@
+{{!-- Older posts are appended to the feed by oda.js (two pages by themselves, then this button).
+     Without JavaScript these are ordinary links. --}}
+<nav class="pagination" data-pagination aria-label="{{t "Page {page} of {totalPages}" page=page totalPages=pages}}">
+    {{#if prev}}<a class="pill newer-posts" href="{{page_url prev}}">{{t "Newer Posts"}}</a>{{/if}}
+    {{#if next}}<a class="btn older-posts" href="{{page_url next}}" data-more>{{t "More"}}</a>{{/if}}
+</nav>
